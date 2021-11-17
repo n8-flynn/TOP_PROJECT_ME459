@@ -1,5 +1,5 @@
 #include <iostream>
-void OC(size_t nelx, size_t nely, double volfrac,double *x, double * dc) {
+double OC(size_t nelx, size_t nely, double volfrac,double *x, double * dc) {
 //nelx is the number of elements in the x direction.
 //nely is the number of elements in the y direction. 
 //volfrac is the desired volume fraction.
@@ -18,4 +18,5 @@ while (l2-l1 > optimal) {
 
 } 
 
+return xnew;
 }
