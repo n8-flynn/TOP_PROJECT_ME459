@@ -7,7 +7,7 @@ x(1:nely,1:nelx) = volfrac; %Creates a nely by nelx array of volume fractions
 loop = 0; %Starts the loop off at zero 
 change = 1.; %Sets the variable change to 1
 % START ITERATION
-while change > 0.01  % While loop that increments the contents inside 
+while change > 0.01  % While loop that incrtements the contents inside 
   loop = loop + 1;
   xold = x;
 % FE-ANALYSIS
