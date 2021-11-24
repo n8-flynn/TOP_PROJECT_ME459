@@ -5,8 +5,8 @@ cmake_minimum_required(VERSION 3.2)
 project(top)
 
 #Adding files
-add_executable(top  top.cpp OC.cpp main.cpp check.cpp FE.cpp)
+add_executable(top top.cpp OC.cpp main.cpp check.cpp FE.cpp)
 
 #Compiling command below 
 
-#gcc top.cpp OC.cpp main.cpp check.cpp FE.cpp  - Wall -O3 -o top
+#gcc top.cpp OC.cpp main.cpp check.cpp FE.cpp - Wall -O3 -o top
