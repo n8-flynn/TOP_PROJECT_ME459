@@ -1,13 +1,19 @@
 %%%% A 99 LINE TOPOLOGY OPTIMIZATION CODE BY OLE SIGMUND, JANUARY 2000 %%%
 %%%% CODE MODIFIED FOR INCREASED SPEED, September 2002, BY OLE SIGMUND %%%
-function top(nelx,nely,volfrac,penal,rmin)
+function [x] = top(nelx,nely,volfrac,penal,rmin)
 % INITIALIZE
+% nelx is the number of elements in the x direction
+% nely is the number of elements in the y direction
+% volfrac is volume fraction that the users hopes to optimize to
+%
 close all;
 x(1:nely,1:nelx) = volfrac; %Creates a nely by nelx array of volume fractions
+disp(x);
 loop = 0; %Starts the loop off at zero 
 change = 1.; %Sets the variable change to 1
+dif_change = 0.0001;
 % START ITERATION
-while change > 0.01  % While loop that incrtements the contents inside 
+while change > dif_change  % While loop that increments the contents inside 
   loop = loop + 1;
   xold = x;
 % FE-ANALYSIS
@@ -30,11 +36,12 @@ while change > 0.01  % While loop that incrtements the contents inside
   [x]    = OC(nelx,nely,x,volfrac,dc); 
 % PRINT RESULTS
   change = max(max(abs(x-xold)));
-  disp([' It.: ' sprintf('%4i',loop) ' Obj.: ' sprintf('%10.4f',c) ...
-       ' Vol.: ' sprintf('%6.3f',sum(sum(x))/(nelx*nely)) ...
-        ' ch.: ' sprintf('%6.3f',change )])
+%   disp([' It.: ' sprintf('%4i',loop) ' Obj.: ' sprintf('%10.4f',c) ...
+%        ' Vol.: ' sprintf('%6.3f',sum(sum(x))/(nelx*nely)) ...
+%         ' ch.: ' sprintf('%6.3f',change )])
 % PLOT DENSITIES  
   colormap(gray); imagesc(-x); axis equal; axis tight; axis off;pause(1e-6);
+%   pause(1);
 end 
 %%%%%%%%%% OPTIMALITY CRITERIA UPDATE %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 function [xnew]=OC(nelx,nely,x,volfrac,dc)  
