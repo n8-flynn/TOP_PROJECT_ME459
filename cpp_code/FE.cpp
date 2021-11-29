@@ -1,3 +1,172 @@
-//Huzaifa, your code will go here for the FE analysis. 
+// Created by Huzaifa Mustafa Unjhawala 
 
-//Fill this in when you can. 
+#include "FE.h"
+
+
+
+// Constructor
+
+FE::FE(unsigned int nelx, unsigned int nely, unsigned int length, unsigned int breadth,double penal, double youngs_mod, double pois_rat){
+	L = length;
+	B = breadth;
+	nelx_ = nelx;
+	nely_ = nely;
+	E = youngs_mod;
+	nu = pois_rat;
+	penal_ = penal;
+}
+
+// Basis function - Internal function needed for fe implementation
+double FE::basis_function(unsigned int node , double xi, double eta){
+//Kind of hard coded for a bilinear shape function for wuad and linear for triangular - Based on node number, a formual will be choosen using switch-case, then based on the quad point , xi and eta will be substituted to return the value
+    double output;
+    switch(node) {
+        case 0:
+            output = 0.25 * (1-xi) * (1-eta);
+            break;
+        case 1:
+            output = 0.25 * (1-xi) * (1+eta);
+            break;
+        case 2:
+            output = 0.25 * (1+xi) * (1+eta);
+            break;
+        case 3:
+            output = 0.25 * (1+xi) * (1-eta);
+            break;
+        default:
+            std::cout<<"There is no "<<node<<" node, invalid input"<<std::endl;
+            break;
+    }
+	return output;
+}
+// Basis function defined using the general formula obtained from
+std::vector<double> FE::basis_gradient(unsigned int node,double xi, double eta){
+// Hard coding the basis gradient as could not derive/find the general formula in the case of 2D - maybe its just a multiplication.
+    
+    std::vector<double> bg(dim,0.0);
+    switch(node) {
+        case 0:
+            bg[0] = -0.25 * (1 - eta);
+            bg[1] = -0.25 * (1 - xi);
+            break;
+        case 1:
+            bg[0] = 0.25 * (1 - eta);
+            bg[1] = -0.25 * (1 - xi);
+            break;
+        case 2:
+            bg[0] = 0.25 * (1 - eta);
+            bg[1] = 0.25 * (1 - xi);
+            break;
+        case 3:
+            bg[0] = -0.25 * (1 - eta);
+            bg[1] = 0.25 * (1 - xi);
+            break;
+        default:
+            std::cout<<"There is no "<<node<<" node, invalid input"<<std::endl;
+    }
+
+    return bg;
+}
+
+void FE::mesh(unsigned int no_quad_points){
+	std::cout<<"Generating Mesh .."<<std::endl;
+
+    // The number of nodes is just an extension of 1D
+    
+    no_of_nodes = (nelx_ + 1) * (nely_ + 1);
+	std::cout<<"Total no. of nodes is "<<no_of_nodes<<std::endl;
+    // Each node has 2 degrees of freedom as the number of dimensions is 2
+    dim = 2;
+    total_dofs = no_of_nodes * dim;
+
+	// Nodal Coordinate array will give the coordinates of each dof not just each node
+	NC.resize(total_dofs);
+    // Since NC is a vector of a vector , we need to initialize each row of EC
+    for(int i = 0; i < total_dofs; i++){
+        NC[i] = std::vector<double>(dim,0.0);
+    }
+
+
+
+	// Make NC - NC remains the same for both the quad and the triangular elements
+
+	double incr_x = L/(nelx_); // since the nodes are equally spaced, the x coordinate will differ by this increment
+    double incr_y = L/(nely_); // similarly, the y coordinate will differ by this incremenet
+    double x = 0.0; // first node is 0,0
+    double y = 0.0;
+    // Construct NC - NC[i][0] gives the x - coordinate of the ith global node, NC[i][1] gives the y
+    // Here, 2 dofs make up one node and hence pairs of dofs will have the same coordinates
+    for(int i = 0; i < total_dofs - 1 ; i = i + dim){
+        NC[i][0] = x;
+        NC[i+1][0]  = x; 
+        x += incr_x;
+        NC[i][1] = y;
+        NC[i+1][1] = y;
+        // If we have reached the x limit, reset x  to 0 and increment y
+        if(abs(NC[i][0] - L) < 0.0000001){
+            x = 0;
+            y += incr_y;
+        }
+
+    }
+    no_of_nodes_per_element = 4;
+    // Since each node has more than 1 dof, the dofs per element will be the no of nodes per element * dimensions
+    dofs_per_ele = no_of_nodes_per_element * dim;
+    nel = nelx_ * nely_;
+    EC.resize(nel);
+    // Since EC is a vector of a vector , we need to initialize each row of EC
+    for(int i = 0; i < nel; i++){
+        // Over here we have to use dofs_per_ele as these will be the number of columns in EC
+        EC[i] = std::vector<int>(dofs_per_ele);
+    }
+    nnx = nelx_ + 1; // Number of nodes along x
+    nny = nely_ + 1; // Number of nodes along y
+    unsigned int dofs_x = nnx * 2; // Number of dofs along x
+    unsigned int dofs_y = nny * 2; // Number of dofs along y
+    int inc_x = 0; // Tells how many increments we have had in x
+    int inc_y = 0; // Tells how many increments we have had in y
+    unsigned int n_count = 0;
+    
+    // Construct EC - EC[i][j] gives the global node number for local node j in element i
+    for(int i = 0; i < nel;i++){
+//            If we have reached last node on x, we increment y and reset our x coutner
+        if(inc_x == dofs_x - 2){
+            inc_y+=2;
+            inc_x = 0;
+        }
+//      Storing clockwise on each element - pattern was hand derived using some examples for lesser number of elements
+//		Node numbers increase left to right. Inc_y takes us to the nodes of the element 1 level down
+        EC[i][0] = n_count + inc_y;
+        EC[i][1] = EC[i][0] + 1;
+        EC[i][2] = EC[i][1] + 1;
+        EC[i][3] = EC[i][2] + 1;
+        EC[i][4] = dofs_x + n_count + inc_y + 2; //Clock wise direction
+        EC[i][5] = EC[i][4] + 1;
+        EC[i][6] = dofs_x + n_count + inc_y;
+        EC[i][7] = EC[i][6] + 1;
+        inc_x += 2;
+        n_count +=2;
+    }
+    // Set up quadrature data - Cant change number of quad points for now - Can include functionality with simple if-else if needed
+    quad_rule = no_quad_points;
+    quad_points.resize(quad_rule); //Resize quadpoints to appropriate size
+    for(int i = 0; i < quad_rule; i++){
+        quad_points[i] = std::vector<double>(dim);
+    }
+    quad_weights.resize(quad_rule); //Resize quadweights to appropriate size
+
+    quad_points[0][0] = -sqrt(3./5.); // xi
+    quad_points[0][1] = -sqrt(3./5.); // eta
+    quad_points[1][0] = 0;
+    quad_points[1][1] = 0;
+    quad_points[2][0] = sqrt(3./5.);
+    quad_points[2][1] = sqrt(3./5.);
+
+    quad_weights[0] = 5./9.;
+    quad_weights[1] = 8./9.;
+    quad_weights[2] = 5./9.;
+
+}
+
+
+
