@@ -168,5 +168,32 @@ void FE::mesh(unsigned int no_quad_points){
 
 }
 
+void FE::define_boundary_condition(double force, double g){
+    std::cout<<std::endl<<"Defining boundary condition"<<std::endl;
+//    Initialize the Dirichlet and Neumann boundary condtions
+    g1 = g;
+    f1 = force;
+//    At each dof which is a boundary, we will put the value of g1, else we will put 0
+    boundary_values.resize(total_dofs);
+//    As of now, we are fixing the left side of the domain i.e. all dofs at x = 0 have 0 displacement
+    for(int dof_no = 0; dof_no < total_dofs ; dof_no++){
+        if(NC[dof_no][0] == 0){
+            boundary_values[dof_no] = g1;
+            boundary_nodes.push_back(dof_no);
+        }
+    }
+}
 
 
+void FE::init_data_structs(){
+    std::cout<<"Initializing data structures"<<std::endl;
+    K.resize(total_dofs,total_dofs); //Resize K
+    K.setZero(total_dofs,total_dofs); // Initialize K to 0
+    F.resize(total_dofs); //Resize F
+    F.setZero(total_dofs); // Setting F to zero here itself since we know the size
+    U.resize(total_dofs); //Resive d
+}
+
+void FE::fe_impl(Eigen::MatrixXd x){
+    
+}
