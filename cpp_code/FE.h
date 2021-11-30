@@ -33,7 +33,7 @@ class FE{
 
 
         // Class datastructures
-        double L,B,g1,E,nu,lambda,mu,penal_; //Standard constants - L - Length, B - breadth, g1 - Dirichlet conditon, E - Youngs Modulus, nu - Poissons ration, lambda and mu
+        double L,B,g1,f1,E,nu,lambda,mu,penal_; //Standard constants - L - Length, B - breadth, g1 - Dirichlet conditon, E - Youngs Modulus, nu - Poissons ration, lambda and mu
         // are the lame's parameters
         unsigned int nelx_,nely_,nel,nnx,nny,no_of_nodes,no_of_nodes_per_element,total_dofs,dofs_per_ele,quad_rule,dim; // standard mesh descriptions
 
