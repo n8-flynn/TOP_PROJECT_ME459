@@ -5,15 +5,17 @@
 #include "check.h"
 #include "OC.h"
 #include "FE.h"
-
+#include "top.h"
 
 using namespace Eigen;
 using namespace std;
 
-MatrixXd top(size_t nelx, size_t nely, double volfrac, double penal, double rmin) {
+MatrixXd top(int nelx, int nely, double volfrac, double penal, double rmin) {
+	
 	MatrixXd x(nelx, nely);
 	x.setConstant(volfrac);
 	MatrixXd xold;
+	MatrixXd dc;
 
 	double change = 1.0;
 	int loop = 0;
@@ -46,11 +48,12 @@ MatrixXd top(size_t nelx, size_t nely, double volfrac, double penal, double rmin
 				dc(ely, elx) = -penal * pow(x(ely, elx), (penal - 1)); //*(transpose of Ue) * KE * Ue;
 			}
 		}
-		dc = check(nelx, nely, rmin, x dc);
-		x = OC(nelx, nely, x, volfrac, dc);
-		change = max(max(abs(x - xold)));
+		dc = check(nelx, nely, rmin, x, dc);
+		x = OC(nelx, nely,volfrac, x, dc);
+		MatrixXd xchange = (x - xold);
+		change = xchange.cwiseAbs().maxCoeff();
 	}
-	return 
+	return x;
 }
 
 

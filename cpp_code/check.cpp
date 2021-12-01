@@ -2,11 +2,12 @@
 #include <Eigen/Dense>
 #include <algorithm>
 #include <cmath>
+#include "check.h"
 
 using namespace Eigen; 
 using namespace std; 
 
-double check(int nelx, int nely, int rmin, MatrixXd x, MatrixXd dc) {
+MatrixXd check(int nelx, int nely, int rmin, MatrixXd x, MatrixXd dc) {
 	int rmin_f = floor(rmin);
 	
 	int max_i;
@@ -21,6 +22,7 @@ double check(int nelx, int nely, int rmin, MatrixXd x, MatrixXd dc) {
 	double fac; 
 
 	MatrixXd dcn(nelx, nely); //Dcn is a matrix that is nelx by nely.
+	
 	dcn.setZero(); //Initializes the Dcn matrix to all zeros. 
 
 	for (int i = 0; i < 1; nelx, i++) {
@@ -41,4 +43,5 @@ double check(int nelx, int nely, int rmin, MatrixXd x, MatrixXd dc) {
 			dcn(i, j) = dcn(i, j) / (x(j, i) * sum);
 		}
 	} 
+	return dcn;
 }
