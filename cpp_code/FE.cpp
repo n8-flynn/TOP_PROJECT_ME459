@@ -4,6 +4,8 @@
 
 
 
+
+
 // Constructor
 
 FE::FE(unsigned int nelx, unsigned int nely, unsigned int length, unsigned int breadth,double penal, double youngs_mod, double pois_rat){
@@ -175,11 +177,19 @@ void FE::define_boundary_condition(double force, double g){
     f1 = force;
 //    At each dof which is a boundary, we will put the value of g1, else we will put 0
     boundary_values.resize(total_dofs);
-//    As of now, we are fixing the left side of the domain i.e. all dofs at x = 0 have 0 displacement
-    for(int dof_no = 0; dof_no < total_dofs ; dof_no++){
+//    This function defines the boundary condition for a cantilivered beam i.e. all dofs at x = 0 have 0 displacement
+    for(unsigned int dof_no = 0; dof_no < total_dofs ; dof_no++){
         if(NC[dof_no][0] == 0){
             boundary_values[dof_no] = g1;
             boundary_nodes.push_back(dof_no);
+        }
+    }
+    // We define the F matrix fully here itself as we have no body force and just a force on the bottom right node acting downwards - Note, the way NC is set up, downwards is +ve Y axis and east is +ve x axis
+    for(unsigned int dof_no = 0; dof_no < total_dofs ; dof_no++){
+        if((abs(NC[dof_no][0] - L) < 0.00001) && (abs(NC[dof_no][1] - B) < 0.00001)){
+            F[dof_no] = 0; // There are 2 dofs that satisfy this constraint - the first one is the x dof so this will be 0
+            F[dof_no + 1] = f1; // The second dof is the y dof and this sbould have a force
+            break; // After we have found this dof, we break otherwise we will be setting a force for someother dof
         }
     }
 }
@@ -194,6 +204,91 @@ void FE::init_data_structs(){
     U.resize(total_dofs); //Resive d
 }
 
+// Function for calculating the value of C - elasticity tensor
+
+double FE::C(unsigned int i, unsigned int j, unsigned int k, unsigned int l){
+    double lambda = (E * nu)/((1. + nu) * (1. - 2.*nu));
+    double mu = E/(2. *(1. + nu));
+    return lambda * (i==j) * (k==l) + mu * ((i==k)*(j==l) + (i==l)* (j==k));
+}
+
+
+
 void FE::fe_impl(Eigen::MatrixXd x){
+    std::cout<<"Starting FE implementation"<<std::endl;
+    // Initializing Flocal and Klocal
+    std::vector<double> Flocal(dofs_per_ele);
+    std::vector<std::vector<double> > Klocal(dofs_per_ele);
+    for(int res = 0; res < dofs_per_ele; res++){
+        Klocal[res] = std::vector<double>(dofs_per_ele);
+    }
+    
+    // Initialize Jacobian matrix
+    Eigen::MatrixXd Jac;
+    Jac.resize(dim,dim);
+    // Initialize Inverse Jacobian matrix
+    Eigen::MatrixXd invJ;
+    invJ.resize(dim,dim);
+    // declare determinate of J
+    double detJ;
+    
+    for(int ele = 0; ele < nel ; ele++){
+        detJ = 0; // Set determinent of J to 0 - In this case it does not vary with each element, however for the generatl case, it should be within the element loop
+        //      Initialize all elements in Klocal to 0
+        std::fill(Klocal.begin(), Klocal.end(), std::vector<double>(dofs_per_ele, 0.));
+        // Set all elements of Flocal to 0 - we will change the boundary elements to the force towards the end of this function
+        std::fill(Flocal.begin(), Flocal.end() , 0.);
+        
+        for(unsigned int q1 = 0; q1 < quad_rule ; q1++){
+            for(unsigned int q2 = 0; q2 < quad_rule ; q2++){
+                Jac.setZero(dim,dim); // Reset J to zero for all quad points
+                // Looping through the dimensions
+                for(unsigned int i = 0; i < dim; i++){
+                    for(unsigned int j = 0; j < dim; j++){
+                        // Looping through the nodes of an element
+                        for(unsigned int A = 0; A < no_of_nodes_per_element; A ++){
+                            // Over here dim*A is used because EC has dim dofs per node. Each of these dofs have the same coordinate, so we can pick either one while calculating the jacobian. Over here, we use all the even dofs
+                            Jac(i,j) += NC[EC[ele][dim*A]][i] * basis_gradient(A, quad_points[q1][i], quad_points[q2][j])[j];
+                        }
+                    }
+                }
+                detJ = Jac.determinant();
+                invJ = Jac.inverse();
+                // Now we go ahead and fill in the Klocal array
+                for(unsigned int A = 0; A < no_of_nodes_per_element; A++){
+                    // Capital I and K denote the physical coordinates
+                    for(unsigned int I = 0; I < dim; I++){
+                        for(unsigned int B=0 ; B < dim; B++){
+                            for(unsigned int K = 0; K < dim; K++){
+                                for(unsigned int J = 0; J < dim; J++){
+                                    for(unsigned int L = 0; L < dim; L++){
+                                        // Looping over the parametric coordinates - I think we only need to loop over j and k since only those indicies are used - Not sure though
+                                        for(unsigned int j = 0; j < dim; j++){
+                                            for(unsigned int l = 0; l < dim; l++){
+                                                // Added i and k since we maybe do need it - Need to figure out how to reduce these number of loops - Will be too slow
+                                                for(unsigned int i = 0 ; i < dim ; i++){
+                                                    for(unsigned int k = 0; k < dim ; k ++){
+                                                        Klocal[dim*A + I][dim*B + K] += (basis_gradient(A, quad_points[q1][0], quad_points[q2][1])[j] * invJ(j,J)) * C(I,J,K,L) * (basis_gradient(A, quad_points[q1][0], quad_points[q2][1])[l] * invJ(l,L)) * detJ * quad_weights[q1] * quad_weights[q2];
+                                                    }
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                        
+                    }
+                }
+            }
+        }
+        // Now we assemble the Klocal into the K matrix which is the global matrix
+        for(unsigned int I = 0; I < dofs_per_ele ; I++){
+            for(unsigned int J = 0; J < dofs_per_ele ; J++){
+                K(EC[ele][I],EC[ele][J]) += Klocal[I][J];
+            }
+        }
+    }
+    std::cout << "The determinant of K is " << K.determinant() << std::endl;
     
 }
