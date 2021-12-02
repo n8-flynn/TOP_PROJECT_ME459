@@ -1,7 +1,8 @@
 // Created by Huzaifa Mustafa Unjhawala 
 
 #include "FE.h"
-
+#include<fstream>
+#include <iostream>
 
 
 
@@ -19,7 +20,7 @@ FE::FE(unsigned int nelx, unsigned int nely, unsigned int length, unsigned int b
 }
 
 // Basis function - Internal function needed for fe implementation
-double FE::basis_function(unsigned int node , double xi, double eta){
+inline double FE::basis_function(unsigned int node , double xi, double eta){
 //Kind of hard coded for a bilinear shape function for wuad and linear for triangular - Based on node number, a formual will be choosen using switch-case, then based on the quad point , xi and eta will be substituted to return the value
     double output;
     switch(node) {
@@ -42,7 +43,7 @@ double FE::basis_function(unsigned int node , double xi, double eta){
 	return output;
 }
 // Basis function defined using the general formula obtained from
-std::vector<double> FE::basis_gradient(unsigned int node,double xi, double eta){
+inline std::vector<double> FE::basis_gradient(unsigned int node,double xi, double eta){
 // Hard coding the basis gradient as could not derive/find the general formula in the case of 2D - maybe its just a multiplication.
     
     std::vector<double> bg(dim,0.0);
@@ -194,6 +195,18 @@ void FE::define_boundary_condition(double force, double g){
     }
 }
 
+void saveData(std::string fileName, Eigen::MatrixXd  matrix)
+{
+    //https://eigen.tuxfamily.org/dox/structEigen_1_1IOFormat.html
+    const static Eigen::IOFormat CSVFormat(Eigen::FullPrecision, Eigen::DontAlignCols, ", ", "\n");
+ 
+    std::ofstream file(fileName);
+    if (file.is_open())
+    {
+        file << matrix.format(CSVFormat);
+        file.close();
+    }
+}
 
 void FE::init_data_structs(){
     std::cout<<"Initializing data structures"<<std::endl;
@@ -254,11 +267,12 @@ void FE::fe_impl(Eigen::MatrixXd x){
                 }
                 detJ = Jac.determinant();
                 invJ = Jac.inverse();
+                saveData("invJ.csv", invJ);
                 // Now we go ahead and fill in the Klocal array
                 for(unsigned int A = 0; A < no_of_nodes_per_element; A++){
                     // Capital I and K denote the physical coordinates
                     for(unsigned int I = 0; I < dim; I++){
-                        for(unsigned int B=0 ; B < dim; B++){
+                        for(unsigned int B=0 ; B < no_of_nodes_per_element; B++){
                             for(unsigned int K = 0; K < dim; K++){
                                 for(unsigned int J = 0; J < dim; J++){
                                     for(unsigned int L = 0; L < dim; L++){
@@ -266,11 +280,7 @@ void FE::fe_impl(Eigen::MatrixXd x){
                                         for(unsigned int j = 0; j < dim; j++){
                                             for(unsigned int l = 0; l < dim; l++){
                                                 // Added i and k since we maybe do need it - Need to figure out how to reduce these number of loops - Will be too slow
-                                                for(unsigned int i = 0 ; i < dim ; i++){
-                                                    for(unsigned int k = 0; k < dim ; k ++){
-                                                        Klocal[dim*A + I][dim*B + K] += (basis_gradient(A, quad_points[q1][0], quad_points[q2][1])[j] * invJ(j,J)) * C(I,J,K,L) * (basis_gradient(A, quad_points[q1][0], quad_points[q2][1])[l] * invJ(l,L)) * detJ * quad_weights[q1] * quad_weights[q2];
-                                                    }
-                                                }
+                                                Klocal[dim*A + I][dim*B + K] += (basis_gradient(A, quad_points[q1][0], quad_points[q2][1])[j] * invJ(j,J)) * C(I,J,K,L) * (basis_gradient(B, quad_points[q1][0], quad_points[q2][1])[l] * invJ(l,L)) * detJ * quad_weights[q1] * quad_weights[q2];
                                             }
                                         }
                                     }
@@ -290,5 +300,38 @@ void FE::fe_impl(Eigen::MatrixXd x){
         }
     }
     std::cout << "The determinant of K is " << K.determinant() << std::endl;
-    
+    saveData("k_before.csv", K);
+    // Now we apply the Dirichlet boundary conditons and modify K accordingly
+    std::cout<<"Applying Dirichlet BC's"<<std::endl;
+    for(unsigned int i : boundary_nodes){
+        double g = boundary_values[i];
+        // Loop to move the approprate column of K to the RHS - source - https://www.math.colostate.edu/~bangerth/videos.676.21.65.html
+        for(unsigned int row = 0; row < total_dofs; row++){
+            // This condition is so that a dof which has already been set in F is not changed
+            if(row == i){
+                continue;
+            }
+            // All the other dofs in F are varied as we move the column of K to the RHS
+            else{
+                F[row] = F[row] - g * K(row,i);
+            }
+        }
+        // Set all the diagonal elements to 1 and all the other elements in the row and column to 1
+        K.row(i) *= 0;
+        K.col(i) *= 0;
+        K(i,i) = 1.;
+        // Set the value in F at athe node
+        F[i] = g;
+    }
+    std::cout << "After applying BC the determinant of K is " << K.determinant() << std::endl;
+    saveData("k_after.csv", K);
+//    std::cout<<K<<std::endl;
 }
+Eigen::VectorXd FE::solve(){
+    std::cout<<"Solving..."<<std::endl;
+    U = K.inverse() * F;
+    std::cout<<U<<std::endl;
+    return U;
+}
+
+
