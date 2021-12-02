@@ -28,12 +28,13 @@ class FE{
         void define_boundary_condition(double force, double g); // Function to fill the boundary_values (stores the values at the boundaries) and the boundary_nodes (stores the global node number of the nodes on the boundary)
         double C(unsigned int i, unsigned int j, unsigned int k, unsigned int l); // Used to get the elasticity tensor C
         void init_data_structs(); //To resize all the global matrices based on the mesh - Internal function
+        void cal_jac(unsigned int q1, unsigned int q2);
         void fe_impl(Eigen::MatrixXd x); //Does the local looping , the assembly and applying the boundary conditions - fills K,F and M which is then used in the steady and transient state solution. Also applies the dirichlet conditions
         Eigen::VectorXd solve(); // Solves and returns U which is then used in the toplogy code
 
 
         // Class datastructures
-        double L,B,g1,f1,E,nu,lambda,mu,penal_; //Standard constants - L - Length, B - breadth, g1 - Dirichlet conditon, E - Youngs Modulus, nu - Poissons ration, lambda and mu
+        double L,B,g1,f1,E,nu,lambda,mu,penal_,detJ; //Standard constants - L - Length, B - breadth, g1 - Dirichlet conditon, E - Youngs Modulus, nu - Poissons ration, lambda and mu
         // are the lame's parameters
         unsigned int nelx_,nely_,nel,nnx,nny,no_of_nodes,no_of_nodes_per_element,total_dofs,dofs_per_ele,quad_rule,dim; // standard mesh descriptions
 
@@ -44,6 +45,7 @@ class FE{
         std::vector< unsigned int > boundary_nodes; //Vector having all the nodes that are part of the dirichlet boundary - Size depends on the number of dirichlet nodes
         std::vector<std::vector<double> > quad_points; // Vector for the location of the quad points in terms of xi
         std::vector<double> quad_weights; // Vector for the weights at the quad points. Still 1D as the weigths do not depend on xi or eta
+        Eigen::MatrixXd invJ; // Inverse Jacobian needed
         Eigen::VectorXd U; // Using Eigne vector to define to solution for ease of solving the linear equation
         Eigen::VectorXd F; // No forcing but the dirichlet conditions will apply
         Eigen::MatrixXd K; // Not using sparse matrix to get maximum speed irrespective of memory usage
