@@ -40,6 +40,14 @@ int main(){
 
     printf("Time taken for fe_imp %g \n",elapsed_total_1 * 1000);
     Eigen::VectorXd U;
+    clock_gettime(CLOCK_MONOTONIC, &start);
     U = tr.solve();
+    clock_gettime(CLOCK_MONOTONIC, &end);
+    time_t elapsed_sec_2 = end.tv_sec - start.tv_sec;
+    long elapsed_nsec_2 = end.tv_nsec - start.tv_nsec;
+
+    double elapsed_total_2 = elapsed_sec_2 + (double)elapsed_nsec_2 / (double)NSEC_PER_SEC;
+
+    printf("Time taken for solution of linear system %g \n",elapsed_total_2 * 1000);
 
 }

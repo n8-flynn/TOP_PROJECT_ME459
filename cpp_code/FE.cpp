@@ -211,7 +211,7 @@ void saveData(std::string fileName, Eigen::MatrixXd  matrix)
 void FE::init_data_structs(){
     std::cout<<"Initializing data structures"<<std::endl;
     K.resize(total_dofs,total_dofs); //Resize K
-    K.setZero(total_dofs,total_dofs); // Initialize K to 0
+//    K.setZero(total_dofs,total_dofs); // Initialize K to 0
     F.resize(total_dofs); //Resize F
     F.setZero(total_dofs); // Setting F to zero here itself since we know the size
     U.resize(total_dofs); //Resive d
@@ -287,11 +287,11 @@ void FE::fe_impl(Eigen::MatrixXd x){
         // Now we assemble the Klocal into the K matrix which is the global matrix
         for(unsigned int I = 0; I < dofs_per_ele ; I++){
             for(unsigned int J = 0; J < dofs_per_ele ; J++){
-                K(EC[ele][I],EC[ele][J]) += Klocal[I][J];
+                K.coeffRef(EC[ele][I],EC[ele][J]) += Klocal[I][J];
             }
         }
     }
-    std::cout << "The determinant of K is " << K.determinant() << std::endl;
+//    std::cout << "The determinant of K is " << K.determinant() << std::endl;
     saveData("k_before.csv", K);
     // Now we apply the Dirichlet boundary conditons and modify K accordingly
     std::cout<<"Applying Dirichlet BC's"<<std::endl;
@@ -305,23 +305,25 @@ void FE::fe_impl(Eigen::MatrixXd x){
             }
             // All the other dofs in F are varied as we move the column of K to the RHS
             else{
-                F[row] = F[row] - g * K(row,i);
+                F[row] = F[row] - g * K.coeffRef(row,i);
             }
         }
         // Set all the diagonal elements to 1 and all the other elements in the row and column to 1
         K.row(i) *= 0;
         K.col(i) *= 0;
-        K(i,i) = 1.;
+        K.coeffRef(i,i) = 1.;
         // Set the value in F at athe node
         F[i] = g;
     }
-    std::cout << "After applying BC the determinant of K is " << K.determinant() << std::endl;
+//    std::cout << "After applying BC the determinant of K is " << K.determinant() << std::endl;
     saveData("k_after.csv", K);
 //    std::cout<<K<<std::endl;
 }
 Eigen::VectorXd FE::solve(){
     std::cout<<"Solving..."<<std::endl;
-    U = K.inverse() * F;
+    Eigen::SimplicialLDLT<Eigen::SparseMatrix<double> > solver;
+    solver.compute(K);
+    U = solver.solve(F);
     std::cout<<U<<std::endl;
     return U;
 }

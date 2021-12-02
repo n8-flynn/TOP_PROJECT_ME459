@@ -48,7 +48,8 @@ class FE{
         Eigen::MatrixXd invJ; // Inverse Jacobian needed
         Eigen::VectorXd U; // Using Eigne vector to define to solution for ease of solving the linear equation
         Eigen::VectorXd F; // No forcing but the dirichlet conditions will apply
-        Eigen::MatrixXd K; // Not using sparse matrix to get maximum speed irrespective of memory usage
+//        Eigen::MatrixXd K; // Not using sparse matrix to get maximum speed irrespective of memory usage
+        Eigen::SparseMatrix<double> K; // The global stiffness matrix - Sparse because its a tridiagonal matrix and so alot of elements are 0 - saves memory
 
 };
 
