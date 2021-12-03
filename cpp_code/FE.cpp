@@ -9,14 +9,13 @@
 
 // Constructor
 
-FE::FE(unsigned int nelx, unsigned int nely, unsigned int length, unsigned int breadth,double penal, double youngs_mod, double pois_rat){
+FE::FE(unsigned int nelx, unsigned int nely, unsigned int length, unsigned int breadth, double youngs_mod, double pois_rat){
 	L = length;
 	B = breadth;
 	nelx_ = nelx;
 	nely_ = nely;
 	E = youngs_mod;
 	nu = pois_rat;
-	penal_ = penal;
 }
 
 // Basis function - Internal function needed for fe implementation
@@ -245,11 +244,10 @@ inline void FE::cal_jac(unsigned int q1, unsigned int q2){
 }
 
 
-void FE::fe_impl(Eigen::MatrixXd x){
+void FE::fe_impl(Eigen::MatrixXd x,double penal){
     std::cout<<"Starting FE implementation"<<std::endl;
-    // Initializing Flocal and Klocal
-    std::vector<double> Flocal(dofs_per_ele);
-    std::vector<std::vector<double> > Klocal(dofs_per_ele);
+    // Initializing Klocal
+    Klocal.resize(dofs_per_ele);
     for(int res = 0; res < dofs_per_ele; res++){
         Klocal[res] = std::vector<double>(dofs_per_ele);
     }
@@ -283,11 +281,20 @@ void FE::fe_impl(Eigen::MatrixXd x){
             }
         }
     }
+    unsigned int ely = 0;
+    unsigned int elx = 0;
+    double x_;
     for(int ele = 0; ele < nel ; ele++){
+        if(elx == nelx_){
+            elx = 0;
+            ely++;
+        }
+        x_ = x(ely,elx);
+        elx++;
         // Now we assemble the Klocal into the K matrix which is the global matrix
         for(unsigned int I = 0; I < dofs_per_ele ; I++){
             for(unsigned int J = 0; J < dofs_per_ele ; J++){
-                K.coeffRef(EC[ele][I],EC[ele][J]) += Klocal[I][J];
+                K.coeffRef(EC[ele][I],EC[ele][J]) += pow(x_,penal) * Klocal[I][J];
             }
         }
     }

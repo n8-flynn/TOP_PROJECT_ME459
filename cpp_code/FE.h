@@ -20,7 +20,7 @@
 typedef Eigen::Matrix<double, Eigen::Dynamic, Eigen::Dynamic> MatrixXd;
 class FE{
     public:
-        FE(unsigned int nelx,unsigned int nely,unsigned int length, unsigned int breadth,double penal,double youngs_mod, double pois_rat); // The constructor takes the required arguments
+        FE(unsigned int nelx,unsigned int nely,unsigned int length, unsigned int breadth,double youngs_mod, double pois_rat); // The constructor takes the required arguments
         double basis_function(unsigned int node, double xi,double eta); //Calculates the basis function corresponding to the node "node" and at the point 'xi' and 'eta' in the parametric space
         std::vector<double> basis_gradient(unsigned int node, double xi,double eta); //Calculates the gradient of the basis function - similar to above
         void mesh(unsigned int no_quad_points); // Function to mesh the domain - Fills the Nodal connectivity and the Elemental Conncectivity matrices - Can even handle different number of elements along each axis
@@ -29,7 +29,7 @@ class FE{
         double C(unsigned int i, unsigned int j, unsigned int k, unsigned int l); // Used to get the elasticity tensor C
         void init_data_structs(); //To resize all the global matrices based on the mesh - Internal function
         void cal_jac(unsigned int q1, unsigned int q2);
-        void fe_impl(Eigen::MatrixXd x); //Does the local looping , the assembly and applying the boundary conditions - fills K,F and M which is then used in the steady and transient state solution. Also applies the dirichlet conditions
+        void fe_impl(Eigen::MatrixXd x,double penal); //Does the local looping , the assembly and applying the boundary conditions - fills K,F and M which is then used in the steady and transient state solution. Also applies the dirichlet conditions
         Eigen::VectorXd solve(); // Solves and returns U which is then used in the toplogy code
 
 
@@ -40,6 +40,7 @@ class FE{
 
 
         std::vector<std::vector<double> > NC; //Nodal Connectivity - NC[i] gives the x and y - coordinate of the ith global node. Size - (No.of nodes, dim)
+        std::vector<std::vector<double> > Klocal;
         std::vector<std::vector<int> > EC; //Elemental connectivity - EC[i][j] gives the global node number for local node j in element i - Size - (No. of elements, No. of nodes per element)
         std::vector<double> boundary_values; // Vector having the dirichlet boundary value wherever its defined and 0 in all other entries - Size (No. of nodes)
         std::vector< unsigned int > boundary_nodes; //Vector having all the nodes that are part of the dirichlet boundary - Size depends on the number of dirichlet nodes

@@ -23,15 +23,16 @@ int main(){
     double force = 1.;
     double g = 0.;
     Eigen::MatrixXd x; // This is the Vol frac matrix
-    x.resize(nelx,nely);
-    x.setZero(nelx,nely);
-    FE tr(nelx,nely,length,breadth,penal,youngs_mod,pois_rat);
+    // Since nely is the number of rows and nelx is the number of columns
+    x.resize(nely,nelx);
+    x.setConstant(nely,nelx,0.5);
+    FE tr(nelx,nely,length,breadth,youngs_mod,pois_rat);
     tr.mesh(no_quad_points);
     tr.init_data_structs();
     tr.define_boundary_condition(force,g);
     
     clock_gettime(CLOCK_MONOTONIC, &start);
-    tr.fe_impl(x);
+    tr.fe_impl(x,penal);
     clock_gettime(CLOCK_MONOTONIC, &end);
     time_t elapsed_sec_1 = end.tv_sec - start.tv_sec;
     long elapsed_nsec_1 = end.tv_nsec - start.tv_nsec;
