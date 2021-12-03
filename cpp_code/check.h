@@ -6,6 +6,6 @@
 
 using namespace Eigen;
 
-MatrixXd check(int nelx, int nely, int rmin, MatrixXd x, MatrixXd dc) 
+inline MatrixXd check(int nelx, int nely, int rmin, MatrixXd x, MatrixXd dc);
 
 #endif

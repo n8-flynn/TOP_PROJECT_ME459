@@ -7,7 +7,7 @@
 using namespace Eigen;
 using namespace std;
 
-MatrixXd top(size_t nelx, size_t nely, double volfrac, double penal, double rmin) 
+inline MatrixXd top(size_t nelx, size_t nely, double volfrac, double penal, double rmin) 
 
 #endif
 

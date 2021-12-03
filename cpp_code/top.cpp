@@ -10,12 +10,13 @@
 using namespace Eigen;
 using namespace std;
 
-MatrixXd top(int nelx, int nely, double volfrac, double penal, double rmin) {
+inline MatrixXd top(int nelx, int nely, double volfrac, double penal, double rmin) {
 	
 	MatrixXd x(nelx, nely);
 	x.setConstant(volfrac);
 	MatrixXd xold;
 	MatrixXd dc;
+	VectorXd U;
 
 	double change = 1.0;
 	int loop = 0;
@@ -31,15 +32,12 @@ MatrixXd top(int nelx, int nely, double volfrac, double penal, double rmin) {
 	while (change > 0.01) {
 		loop++;
 		xold = x;
-		/*
-		Here the FE function needs to go. This will be then put into the sensitivity analysis which is part of the Topology funciton. 
-		1. Test this function with the exisiting function.
-		2. Test this function with Huzaifa's function. 
-		*/
+
+		U = FE(nelx, nely)
+
 		for (int ely = 0; ely < nely; ely++) {
 			for (int elx = 0; elx < nelx; elx++) {
-				n1 = (nely++) * (elx--) + ely;
-				n2 = (nely++) * elx + ely; 
+				
 				/* 
 				Here goes the FE function. The manipulation of the stiffness matrix goes here. 
 				Ue = ?? Up to you Huzaifa. 
@@ -49,7 +47,7 @@ MatrixXd top(int nelx, int nely, double volfrac, double penal, double rmin) {
 			}
 		}
 		dc = check(nelx, nely, rmin, x, dc);
-		x = OC(nelx, nely,volfrac, x, dc);
+		x = OC(nelx, nely,volfrac, &x, &dc);
 		MatrixXd xchange = (x - xold);
 		change = xchange.cwiseAbs().maxCoeff();
 	}

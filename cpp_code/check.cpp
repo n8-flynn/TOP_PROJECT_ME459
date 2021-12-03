@@ -7,7 +7,7 @@
 using namespace Eigen; 
 using namespace std; 
 
-MatrixXd check(int nelx, int nely, int rmin, MatrixXd x, MatrixXd dc) {
+inline MatrixXd check(int nelx, int nely, int rmin, MatrixXd x, MatrixXd dc) {
 	int rmin_f = floor(rmin);
 	
 	int max_i;
