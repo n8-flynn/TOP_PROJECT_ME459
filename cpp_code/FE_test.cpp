@@ -30,9 +30,9 @@ int main(){
     tr.mesh(no_quad_points);
     tr.init_data_structs();
     tr.define_boundary_condition(force,g);
-    
+    tr.cal_k_local();
     clock_gettime(CLOCK_MONOTONIC, &start);
-    tr.fe_impl(x,penal);
+    tr.assemble(x,penal);
     clock_gettime(CLOCK_MONOTONIC, &end);
     time_t elapsed_sec_1 = end.tv_sec - start.tv_sec;
     long elapsed_nsec_1 = end.tv_nsec - start.tv_nsec;

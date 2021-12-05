@@ -243,17 +243,17 @@ inline void FE::cal_jac(unsigned int q1, unsigned int q2){
     saveData("invJ.csv", invJ);
 }
 
-
-void FE::fe_impl(Eigen::MatrixXd x,double penal){
-    std::cout<<"Starting FE implementation"<<std::endl;
+void FE::cal_k_local(){
+    std::cout<<"Determining Klocal"<<std::endl;
     // Initializing Klocal
-    Klocal.resize(dofs_per_ele);
-    for(int res = 0; res < dofs_per_ele; res++){
-        Klocal[res] = std::vector<double>(dofs_per_ele);
-    }
+    Klocal.resize(dofs_per_ele,dofs_per_ele);
+    Klocal.setZero();
+//    for(int res = 0; res < dofs_per_ele; res++){
+//        Klocal[res] = std::vector<double>(dofs_per_ele);
+//    }
     
 
-    std::fill(Klocal.begin(), Klocal.end(), std::vector<double>(dofs_per_ele, 0.));
+//    std::fill(Klocal.begin(), Klocal.end(), std::vector<double>(dofs_per_ele, 0.));
     for(unsigned int q1 = 0; q1 < quad_rule ; q1++){
         for(unsigned int q2 = 0; q2 < quad_rule ; q2++){
             cal_jac(q1,q2);
@@ -269,7 +269,7 @@ void FE::fe_impl(Eigen::MatrixXd x,double penal){
                                     for(unsigned int j = 0; j < dim; j++){
                                         for(unsigned int l = 0; l < dim; l++){
                                             // Added i and k since we maybe do need it - Need to figure out how to reduce these number of loops - Will be too slow
-                                            Klocal[dim*A + I][dim*B + K] += (basis_gradient(A, quad_points[q1][0], quad_points[q2][1])[j] * invJ(j,J)) * C(I,J,K,L) * (basis_gradient(B, quad_points[q1][0], quad_points[q2][1])[l] * invJ(l,L)) * detJ * quad_weights[q1] * quad_weights[q2];
+                                            Klocal(dim*A + I,dim*B + K) += (basis_gradient(A, quad_points[q1][0], quad_points[q2][1])[j] * invJ(j,J)) * C(I,J,K,L) * (basis_gradient(B, quad_points[q1][0], quad_points[q2][1])[l] * invJ(l,L)) * detJ * quad_weights[q1] * quad_weights[q2];
                                         }
                                     }
                                 }
@@ -281,6 +281,11 @@ void FE::fe_impl(Eigen::MatrixXd x,double penal){
             }
         }
     }
+}
+
+
+void FE::assemble(Eigen::MatrixXd x,double penal){
+    std::cout<<"Assembling and applying dirichlet conditions"<<std::endl;
     unsigned int ely = 0;
     unsigned int elx = 0;
     double x_;
@@ -294,7 +299,7 @@ void FE::fe_impl(Eigen::MatrixXd x,double penal){
         // Now we assemble the Klocal into the K matrix which is the global matrix
         for(unsigned int I = 0; I < dofs_per_ele ; I++){
             for(unsigned int J = 0; J < dofs_per_ele ; J++){
-                K.coeffRef(EC[ele][I],EC[ele][J]) += pow(x_,penal) * Klocal[I][J];
+                K.coeffRef(EC[ele][I],EC[ele][J]) += pow(x_,penal) * Klocal(I,J);
             }
         }
     }

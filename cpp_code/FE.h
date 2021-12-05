@@ -29,7 +29,8 @@ class FE{
         double C(unsigned int i, unsigned int j, unsigned int k, unsigned int l); // Used to get the elasticity tensor C
         void init_data_structs(); //To resize all the global matrices based on the mesh - Internal function
         void cal_jac(unsigned int q1, unsigned int q2);
-        void fe_impl(Eigen::MatrixXd x,double penal); //Does the local looping , the assembly and applying the boundary conditions - fills K,F and M which is then used in the steady and transient state solution. Also applies the dirichlet conditions
+        void cal_k_local(); // Calculates the K local for one element - As all elements are the same, can use the same klocal
+        void assemble(Eigen::MatrixXd x,double penal); //Uses the klocal to assemble K global using the volume fractions
         Eigen::VectorXd solve(); // Solves and returns U which is then used in the toplogy code
 
 
@@ -40,7 +41,8 @@ class FE{
 
 
         std::vector<std::vector<double> > NC; //Nodal Connectivity - NC[i] gives the x and y - coordinate of the ith global node. Size - (No.of nodes, dim)
-        std::vector<std::vector<double> > Klocal;
+//        std::vector<std::vector<double> > Klocal;
+        Eigen::MatrixXd Klocal;
         std::vector<std::vector<int> > EC; //Elemental connectivity - EC[i][j] gives the global node number for local node j in element i - Size - (No. of elements, No. of nodes per element)
         std::vector<double> boundary_values; // Vector having the dirichlet boundary value wherever its defined and 0 in all other entries - Size (No. of nodes)
         std::vector< unsigned int > boundary_nodes; //Vector having all the nodes that are part of the dirichlet boundary - Size depends on the number of dirichlet nodes
