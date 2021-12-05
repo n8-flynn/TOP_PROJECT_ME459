@@ -1,5 +1,5 @@
 #include <iostream>
-#include <Eigen/Dense>
+#include <Eigen>
 #include <algorithm>
 #include <cmath>
 #include "check.h"
@@ -7,7 +7,7 @@
 using namespace Eigen; 
 using namespace std; 
 
-inline MatrixXd check(int nelx, int nely, int rmin, MatrixXd x, MatrixXd dc) {
+MatrixXd check(int nelx, int nely, int rmin, MatrixXd x, MatrixXd dc) {
 	int rmin_f = floor(rmin);
 	
 	int max_i;

@@ -5,7 +5,7 @@ cmake_minimum_required(VERSION 3.2)
 project(top)
 
 #Adding files
-add_executable(fe FE_test.cpp FE.cpp FE.h)
+add_executable(trial main.cpp check.cpp top.cpp OC.cpp FE.cpp check.h OC.h FE.h top.h)
 
 #Compiling command below 
 

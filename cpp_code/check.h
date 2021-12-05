@@ -1,11 +1,12 @@
-#ifndef check_h
-#define check_h
+#ifndef CHECK_h
+#define CHECK_h
 
 #include <stddef.h>
-#include <Eigen/Dense>
+//#include <Eigen/Dense>
+#include <Eigen>
 
 using namespace Eigen;
 
-inline MatrixXd check(int nelx, int nely, int rmin, MatrixXd x, MatrixXd dc);
+MatrixXd check(int nelx, int nely, int rmin, MatrixXd x, MatrixXd dc);
 
 #endif

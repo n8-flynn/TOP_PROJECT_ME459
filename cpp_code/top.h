@@ -1,13 +1,13 @@
-#ifndef OC_h
-#define OC_h
+#ifndef TOP_h
+#define TOP_h
 
-#include <Eigen/Dense>
+#include <Eigen>
 #include <stddef.h>
 
 using namespace Eigen;
 using namespace std;
 
-inline MatrixXd top(size_t nelx, size_t nely, double volfrac, double penal, double rmin) 
+MatrixXd top(unsigned int nelx, unsigned int nely, double volfrac, double penal, double rmin);
 
 #endif
 
