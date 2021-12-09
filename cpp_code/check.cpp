@@ -17,11 +17,11 @@ MatrixXd check(int nelx, int nely, int rmin, MatrixXd x, MatrixXd dc)
 	int l; 
 	double fac; 
 
-	MatrixXd dcn(nelx, nely); //Dcn is a matrix that is nelx by nely.
+	MatrixXd dcn(nely, nelx); //Dcn is a matrix that is nelx by nely.
 	
 	dcn.setZero(); //Initializes the Dcn matrix to all zeros. 
 
-	for (int i = 0; i < nelx; i++) 
+	for (int i = 0; i < nelx; i++) // i increases when it less than nelx
 	{
 		for (int j = 0; j < nely; j++) 
 		{
@@ -29,7 +29,9 @@ MatrixXd check(int nelx, int nely, int rmin, MatrixXd x, MatrixXd dc)
 
 			max_i = max(i - rmin_f, 1 );
 			min_i = min(i + rmin_f, nelx);
+
 			k = max_i;
+			
 			for (int k = max_i;k < min_i; k++) 
 			{
 				max_j = max(j - rmin_f, 1);
