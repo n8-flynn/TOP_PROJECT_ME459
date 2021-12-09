@@ -77,10 +77,10 @@ MatrixXd top(unsigned int nelx, unsigned int nely, double volfrac, double penal,
 		}
 
 	// Function check below causes Eigen errors (has to be something small in the function)
-	//	dc = check(nelx, nely, rmin, x, dc);
+	dc = check(nelx, nely, rmin, x, dc);
 	
 	//Function OC below causes Eigen errors (has to be something small in the function)
-	//	x = OC(nelx, nely,volfrac, x, dc); 
+	x = OC(nelx, nely,volfrac, x, dc); 
 
 		MatrixXd xchange = (x - xold);
 
