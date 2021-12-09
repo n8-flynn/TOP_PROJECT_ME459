@@ -5,7 +5,7 @@
 using namespace Eigen;
 using namespace std;
 
-MatrixXd OC(size_t nelx, size_t nely, double volfrac,MatrixXd& x,MatrixXd& dc)
+MatrixXd OC(size_t nelx, size_t nely, double volfrac,MatrixXd &x,MatrixXd &dc)
 {
 	//nelx is the number of elements in the x direction.
 	//nely is the number of elements in the y direction. 

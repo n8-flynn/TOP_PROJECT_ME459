@@ -29,34 +29,38 @@ MatrixXd top(unsigned int nelx, unsigned int nely, double volfrac, double penal,
 	double length = 1; //! Length
 	double breadth = 1; //! Breadth 
    	double youngs_mod = 1; //! Youngs Modulus of the material
-    	double pois_rat = 0.3; //! Poisons ratio
-    	double force = 1.; //! Force acting on the cantilivered beam
-    	double g = 0.; //! The dirichlet boundary condition - For this problem we fix the left edge of the 2D domain
+    double pois_rat = 0.3; //! Poisons ratio
+    double force = 1.; //! Force acting on the cantilivered beam
+    double g = 0.; //! The dirichlet boundary condition - For this problem we fix the left edge of the 2D domain
 
-    	// Define the FE class object
-    	FE fe_object(nelx,nely,length,breadth,youngs_mod,pois_rat);
-    	// Generate the mesh - This basically fills up the nodal coordinate and the element connectiviity matrices - It takes no_of_quad_points as we also fill up the 
-    	// values of the quad rule in this function
-    	fe_object.mesh(no_quad_points); //! Initiliaze all the major datastructures to the right size
-    	fe_object.init_data_structs(); //! Define the boundary conditons - Currently only supports the cantilivered boundary conditions
-    	fe_object.define_boundary_condition(force,g);
-    	fe_object.cal_k_local();
+    // Define the FE class object
+    FE fe_object(nelx,nely,length,breadth,youngs_mod,pois_rat);
+    // Generate the mesh - This basically fills up the nodal coordinate and the element connectiviity matrices - It takes no_of_quad_points as we also fill up the 
+    // values of the quad rule in this function
+    fe_object.mesh(no_quad_points); //! Initiliaze all the major datastructures to the right size
+    fe_object.init_data_structs(); //! Define the boundary conditons - Currently only supports the cantilivered boundary conditions
+    fe_object.define_boundary_condition(force,g);
+    fe_object.cal_k_local();
 	
-	printf("\nBefore while loop\n");
-	printf("Change = %f\n",change);
-	
-	while (change > 0.0001) 
-	{
-		printf("Change =%f\n",change);
+	bool done = false; 
+	if (change > 0.01) {
+
+	}
+	while (!done) {
+		
+		if (change > 0.01) {
+			done = true; 
+		}
+
 		loop++;
 		xold = x;
 
 		fe_object.assemble(x,penal);
 		U = fe_object.solve();
-        	unsigned int ele_no;
-        	std::vector<int> global_nodes;
-        	VectorXd Ue;
-        	Ue.resize(fe_object.dofs_per_ele);
+        unsigned int ele_no;
+        vector<int> global_nodes;
+        VectorXd Ue;
+        Ue.resize(fe_object.dofs_per_ele);
         	
 		double mat_res = 0;
 
@@ -68,18 +72,24 @@ MatrixXd top(unsigned int nelx, unsigned int nely, double volfrac, double penal,
                 		mat_res = Ue.transpose()*fe_object.Klocal * Ue;
                 		// FE implementation is all in mat_res
                 		c += pow(x(ely, elx), penal)* mat_res; //*(transpose of Ue) * KE * Ue
-				dc(ely, elx) = -penal * pow(x(ely, elx), (penal - 1)); //*(transpose of Ue) * KE * Ue;
+						dc(ely, elx) = -penal * pow(x(ely, elx), (penal - 1)); //*(transpose of Ue) * KE * Ue;
 			}
 		}
 
-		dc = check(nelx, nely, rmin, x, dc);
-		x = OC(nelx, nely,volfrac, x, dc);
+	// Function check below causes Eigen errors (has to be something small in the function)
+	//	dc = check(nelx, nely, rmin, x, dc);
+	
+	//Function OC below causes Eigen errors (has to be something small in the function)
+	//	x = OC(nelx, nely,volfrac, x, dc); 
+
 		MatrixXd xchange = (x - xold);
+
 		change = abs(xchange.maxCoeff());
-		printf("Iteration # %d",loop); 
+
+		printf("\nIteration # %d, change = %d\n",loop,change); 
 
 		}
-	printf("\nAfter while loop\n");
+
 	return x;
 }
 
