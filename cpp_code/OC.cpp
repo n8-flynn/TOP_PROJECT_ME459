@@ -18,8 +18,8 @@ MatrixXd OC(size_t nelx, size_t nely, double volfrac,MatrixXd& x,MatrixXd& dc)
 	double optimal = 0.0001; 
 	double lmid;
 	
-	MatrixXd move (nelx, nely);
-	MatrixXd xnew;
+	MatrixXd move(nelx, nely);
+	MatrixXd xnew(nelx, nely);
 	MatrixXd newdc(nelx, nely);
 	
 	move.setConstant(0.2);
@@ -27,20 +27,22 @@ MatrixXd OC(size_t nelx, size_t nely, double volfrac,MatrixXd& x,MatrixXd& dc)
 	while (l2 - l1 > optimal)
 	{
 		lmid = 0.5 * (l2 + l1);
-        //Commented this out as it was giving compile error
-		//xnew = max(x, xnew);
+
+		xnew.setConstant(max(x.maxCoeff(&nelx, &nely), xnew.maxCoeff(&nelx, &nely)));
 
 		MatrixXd m1 = x - move; 
 		MatrixXd m2 = x + move;
 		newdc = -1 * dc / lmid;
-//		Commented this out as it was giving a complie error. According to the matlab code, you need to take the square root of the elements inside the eigen matrix however this command takes the sqaure root of the matrix itself.
-		//newdc.sqrt();
+		
+		newdc.array().sqrt();
 		
 		MatrixXd m3 = x * newdc;
 		
-        //Commented this out as it was giving compile error
-		//volatile double ree = (max(optimal, max(mmax(m1, nelx, nely), min(1.0, mmin(m2, nelx, nely), m3))));
-		//xnew.setConstant(max(optimal, max(mmax(m1, nelx, nely), min(1.0, mmin(m2, nelx, nely), m3))));
+		double mmax = m1.maxCoeff(&nelx, &nely);
+		double mmin = m2.minCoeff(&nelx, &nely); 
+        
+		xnew.setConstant(max(optimal, max(mmax, min(1.0, mmin))));
+		
 		if (xnew.sum() - volfrac * nelx * nely > 0)
 		{
 			l1 = lmid;
@@ -51,41 +53,5 @@ MatrixXd OC(size_t nelx, size_t nely, double volfrac,MatrixXd& x,MatrixXd& dc)
 	return xnew;
 }
 
-//For this function, I need to test this out ahead of time to even make sure it works before running it in the code 
-//The function should return the maximum value of the matrix if done correctly. 
-inline double mmax(MatrixXd x,int nelx, int nely)
-{
-	double maxVal = x(0, 0);
-
-	for (int i = 0; i < nely; i++)
-	{
-		for (int j = 0; i < nelx; j++)
-		{
-			if (x(j, i) > maxVal)
-			{
-				maxVal = x(j, i);
-			}
-		}
-	}
-	return maxVal;
-}
 
 
-//For this function, I need to test this out ahead of time to even make sure it works before running it in the code 
-//The function should return the min value of the matrix if done correctly. 
-inline double mmin(MatrixXd x, int nelx, int nely)
-{
-	double minVal = x(0, 0);
-
-	for (int i = 0; i < nely; i++)
-	{
-		for (int j = 0; i < nelx; j++)
-		{
-			if (x(j, i) < minVal)
-			{
-				minVal = x(j, i);
-			}
-		}
-	}
-	return minVal;
-}
