@@ -9,6 +9,6 @@
 
 using namespace Eigen;
 
-MatrixXd OC(size_t nelx, size_t nely, double volfrac, MatrixXd& x, MatrixXd& dc);
+MatrixXd OC(unsigned int nelx, unsigned int nely, double volfrac, MatrixXd& x, MatrixXd& dc);
 
 #endif
