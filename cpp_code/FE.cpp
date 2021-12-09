@@ -4,9 +4,6 @@
 #include <fstream>
 #include <iostream>
 
-
-
-
 // Constructor
 
 FE::FE(unsigned int nelx, unsigned int nely, unsigned int length, unsigned int breadth, double youngs_mod, double pois_rat){
@@ -84,7 +81,7 @@ void FE::mesh(unsigned int no_quad_points){
 	// Nodal Coordinate array will give the coordinates of each dof not just each node
 	NC.resize(total_dofs);
     // Since NC is a vector of a vector , we need to initialize each row of EC
-    for(int i = 0; i < total_dofs; i++){
+    for(unsigned int i = 0; i < total_dofs; i++){
         NC[i] = std::vector<double>(dim,0.0);
     }
 
@@ -98,7 +95,7 @@ void FE::mesh(unsigned int no_quad_points){
     double y = 0.0;
     // Construct NC - NC[i][0] gives the x - coordinate of the ith global node, NC[i][1] gives the y
     // Here, 2 dofs make up one node and hence pairs of dofs will have the same coordinates
-    for(int i = 0; i < total_dofs - 1 ; i = i + dim){
+    for(unsigned int i = 0; i < total_dofs - 1 ; i = i + dim){
         NC[i][0] = x;
         NC[i+1][0]  = x; 
         x += incr_x;
@@ -117,7 +114,7 @@ void FE::mesh(unsigned int no_quad_points){
     nel = nelx_ * nely_;
     EC.resize(nel);
     // Since EC is a vector of a vector , we need to initialize each row of EC
-    for(int i = 0; i < nel; i++){
+    for(unsigned int i = 0; i < nel; i++){
         // Over here we have to use dofs_per_ele as these will be the number of columns in EC
         EC[i] = std::vector<int>(dofs_per_ele);
     }
@@ -130,7 +127,7 @@ void FE::mesh(unsigned int no_quad_points){
     unsigned int n_count = 0;
     
     // Construct EC - EC[i][j] gives the global node number for local node j in element i
-    for(int i = 0; i < nel;i++){
+    for(unsigned int i = 0; i < nel;i++){
 //            If we have reached last node on x, we increment y and reset our x coutner
         if(inc_x == dofs_x - 2){
             inc_y+=2;
@@ -152,7 +149,7 @@ void FE::mesh(unsigned int no_quad_points){
     // Set up quadrature data - Cant change number of quad points for now - Can include functionality with simple if-else if needed
     quad_rule = no_quad_points;
     quad_points.resize(quad_rule); //Resize quadpoints to appropriate size
-    for(int i = 0; i < quad_rule; i++){
+    for(unsigned int i = 0; i < quad_rule; i++){
         quad_points[i] = std::vector<double>(dim);
     }
     quad_weights.resize(quad_rule); //Resize quadweights to appropriate size
@@ -289,7 +286,7 @@ void FE::assemble(Eigen::MatrixXd x,double penal){
     unsigned int ely = 0;
     unsigned int elx = 0;
     double x_;
-    for(int ele = 0; ele < nel ; ele++){
+    for(unsigned int ele = 0; ele < nel ; ele++){
         if(elx == nelx_){
             elx = 0;
             ely++;

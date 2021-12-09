@@ -1,8 +1,11 @@
 #ifndef OC_h
 #define OC_h
 
+#include <iostream> 
+#include <algorithm>
+#include <cmath>
 #include <stddef.h>
-#include <Eigen>
+#include "Eigen"
 
 using namespace Eigen;
 

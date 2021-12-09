@@ -1,7 +1,3 @@
-#include <iostream>
-#include <algorithm>
-#include <Eigen>
-#include <numeric>
 #include "OC.h"
 #include <cmath>
 #include <algorithm>
@@ -17,33 +13,34 @@ MatrixXd OC(size_t nelx, size_t nely, double volfrac,MatrixXd& x,MatrixXd& dc)
 	//x is an array of densities.
 	//dc is ??
  
-	int l1 = 0;
-	int l2 = 100000;
-
+	double l1 = 0;
+	double l2 = 100000;
 	double optimal = 0.0001; 
-	MatrixXd move (nelx, nely);
-	move.setConstant(0.2);
 	double lmid;
-	double sum; 
-
-	MatrixXd xnew; 
+	
+	MatrixXd move (nelx, nely);
+	MatrixXd xnew;
+	MatrixXd newdc(nelx, nely);
+	
+	move.setConstant(0.2);
 
 	while (l2 - l1 > optimal)
 	{
 		lmid = 0.5 * (l2 + l1);
         //Commented this out as it was giving compile error
-//		xnew = max(x, xnew);
+		//xnew = max(x, xnew);
 
 		MatrixXd m1 = x - move; 
 		MatrixXd m2 = x + move;
-		MatrixXd newdc = -dc / lmid;
+		newdc = -1 * dc / lmid;
 //		Commented this out as it was giving a complie error. According to the matlab code, you need to take the square root of the elements inside the eigen matrix however this command takes the sqaure root of the matrix itself.
-//		newdc = newdc.pow(0.5);
+		//newdc.sqrt();
 		
 		MatrixXd m3 = x * newdc;
 		
         //Commented this out as it was giving compile error
-//		xnew.setConstant(max(optimal, max(mmax(m1, nelx, nely), min(1.0, mmin(m2, nelx, nely), m3))));
+		//volatile double ree = (max(optimal, max(mmax(m1, nelx, nely), min(1.0, mmin(m2, nelx, nely), m3))));
+		//xnew.setConstant(max(optimal, max(mmax(m1, nelx, nely), min(1.0, mmin(m2, nelx, nely), m3))));
 		if (xnew.sum() - volfrac * nelx * nely > 0)
 		{
 			l1 = lmid;
@@ -54,6 +51,8 @@ MatrixXd OC(size_t nelx, size_t nely, double volfrac,MatrixXd& x,MatrixXd& dc)
 	return xnew;
 }
 
+//For this function, I need to test this out ahead of time to even make sure it works before running it in the code 
+//The function should return the maximum value of the matrix if done correctly. 
 inline double mmax(MatrixXd x,int nelx, int nely)
 {
 	double maxVal = x(0, 0);
@@ -71,6 +70,9 @@ inline double mmax(MatrixXd x,int nelx, int nely)
 	return maxVal;
 }
 
+
+//For this function, I need to test this out ahead of time to even make sure it works before running it in the code 
+//The function should return the min value of the matrix if done correctly. 
 inline double mmin(MatrixXd x, int nelx, int nely)
 {
 	double minVal = x(0, 0);

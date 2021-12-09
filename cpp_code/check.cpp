@@ -1,5 +1,4 @@
 #include <iostream>
-#include <Eigen>
 #include <algorithm>
 #include <cmath>
 #include "check.h"

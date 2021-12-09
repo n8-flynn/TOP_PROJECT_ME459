@@ -1,7 +1,3 @@
-#include <iostream> 
-#include <Eigen>
-#include <algorithm>
-#include <cmath>
 #include "check.h"
 #include "OC.h"
 #include "FE.h"
@@ -10,42 +6,44 @@
 using namespace Eigen;
 using namespace std;
 
-MatrixXd top(unsigned int nelx, unsigned int nely, double volfrac, double penal, double rmin) {
-	
+int main()
+{
+	unsigned int nelx = 20; 
+	unsigned int nely = 10; 
+	double volfrac = 0.5;
+	double penal = 2.0;
+	double rmin = 1.125;
+	double change = 1.0;
+	int loop = 0;
+	double c = 0;
+
 	MatrixXd x(nely, nelx);
+	MatrixXd dc(nely, nelx);
 	x.setConstant(volfrac);
 	MatrixXd xold;
 	VectorXd U;
 
-	double change = 1.0;
-	int loop = 0;
 	//! Change is the small change in xold and xnew.
 	//! Sets the old volume fraction equal to the previous volume fraction x so thast you can compare the two volume fraction.
 	//! xold and x are then used to be compared to each other. 
-	double n1;
-	double n2;
-	double c = 0;
-	MatrixXd dc(nely, nelx);
-	// Defining material properties required for the FEM code
-	// This defines the number of quadrature points we use to integrate our finite dimensional weak form in order to compute K elemental - Over here we use the 3 point guass quad
-	// rule as this is sufficient to compute the eintegration exactly
-	unsigned int no_quad_points = 3;
-	// Domain dimensions
-	double length = 1; // Length
-    double breadth = 1; // Breadth 
-    double youngs_mod = 1; // Youngs Modulus of the material
-    double pois_rat = 0.3; // Poisons ratio
-    double force = 1.; // Force acting on the cantilivered beam
-    double g = 0.; // The dirichlet boundary condition - For this problem we fix the left edge of the 2D domain
+	//! Defining material properties required for the FEM code
+	//! This defines the number of quadrature points we use to integrate our finite dimensional weak form in order to compute K elemental - Over here we use the 3 point guass quad
+	//! rule as this is sufficient to compute the eintegration exactly
+	
+	unsigned int no_quad_points = 3; //! Domain dimensions
+	double length = 1; //! Length
+    double breadth = 1; //! Breadth 
+    double youngs_mod = 1; //! Youngs Modulus of the material
+    double pois_rat = 0.3; //! Poisons ratio
+    double force = 1.; //! Force acting on the cantilivered beam
+    double g = 0.; //! The dirichlet boundary condition - For this problem we fix the left edge of the 2D domain
 
     // Define the FE class object
     FE fe_object(nelx,nely,length,breadth,youngs_mod,pois_rat);
     // Generate the mesh - This basically fills up the nodal coordinate and the element connectiviity matrices - It takes no_of_quad_points as we also fill up the 
     // values of the quad rule in this function
-    fe_object.mesh(no_quad_points);
-    // Initiliaze all the major datastructures to the right size
-    fe_object.init_data_structs();
-    // Define the boundary conditons - Currently only supports the cantilivered boundary conditions
+    fe_object.mesh(no_quad_points); //! Initiliaze all the major datastructures to the right size
+    fe_object.init_data_structs(); //! Define the boundary conditons - Currently only supports the cantilivered boundary conditions
     fe_object.define_boundary_condition(force,g);
     fe_object.cal_k_local();
 
@@ -77,6 +75,5 @@ MatrixXd top(unsigned int nelx, unsigned int nely, double volfrac, double penal,
 		MatrixXd xchange = (x - xold);
 		change = xchange.cwiseAbs().maxCoeff();
 	}
-	return x;
 }
 
