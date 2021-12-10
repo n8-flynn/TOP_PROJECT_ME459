@@ -4,9 +4,6 @@
 #include <fstream>
 #include <iostream>
 
-
-
-
 // Constructor
 
 FE::FE(unsigned int nelx, unsigned int nely, double length, double breadth, double youngs_mod, double pois_rat){
@@ -84,7 +81,7 @@ void FE::mesh(unsigned int no_quad_points){
 	// Nodal Coordinate array will give the coordinates of each dof not just each node
 	NC.resize(total_dofs);
     // Since NC is a vector of a vector , we need to initialize each row of EC
-    for(int i = 0; i < total_dofs; i++){
+    for(unsigned int i = 0; i < total_dofs; i++){
         NC[i] = std::vector<double>(dim,0.0);
     }
 
@@ -98,7 +95,7 @@ void FE::mesh(unsigned int no_quad_points){
     double y = 0.0;
     // Construct NC - NC[i][0] gives the x - coordinate of the ith global node, NC[i][1] gives the y
     // Here, 2 dofs make up one node and hence pairs of dofs will have the same coordinates
-    for(int i = 0; i < total_dofs - 1 ; i = i + dim){
+    for(unsigned int i = 0; i < total_dofs - 1 ; i = i + dim){
         NC[i][0] = x;
         NC[i+1][0]  = x; 
         x += incr_x;
@@ -114,11 +111,11 @@ void FE::mesh(unsigned int no_quad_points){
     no_of_nodes_per_element = 4;
     // Since each node has more than 1 dof, the dofs per element will be the no of nodes per element * dimensions
     dofs_per_ele = no_of_nodes_per_element * dim;
-    nel = nelx_ * nely_;
-//    Remove beow part after testing - Only for the purpose of testing
+    nel = nelx_ * nely_;//    Remove beow part after testing - Only for the purpose of testing
     
     EC_2.resize(nel);
-    for(int i = 0; i < nel; i++){
+    // Since EC is a vector of a vector , we need to initialize each row of EC
+    for(unsigned int i = 0; i < nel; i++){
         // Over here we have to use dofs_per_ele as these will be the number of columns in EC
         EC_2[i] = std::vector<int>(no_of_nodes_per_element);
     }
@@ -130,7 +127,7 @@ void FE::mesh(unsigned int no_quad_points){
     int inc_y_ = 0; // Tells how many increments we have had in y
     
     // Construct EC - EC[i][j] gives the global node number for local node j in element i
-    for(int i = 0; i < nel;i++){
+    for(unsigned int i = 0; i < nel;i++){
 //            If we have reached last node on x, we increment y and reset our x coutner
         if(inc_x_ == nnx_ - 1){
             inc_y_+=1;
@@ -148,7 +145,7 @@ void FE::mesh(unsigned int no_quad_points){
     // Set up quadrature data - Cant change number of quad points for now - Can include functionality with simple if-else if needed
     quad_rule = no_quad_points;
     quad_points.resize(quad_rule); //Resize quadpoints to appropriate size
-    for(int i = 0; i < quad_rule; i++){
+    for(unsigned int i = 0; i < quad_rule; i++){
         quad_points[i] = std::vector<double>(dim);
     }
     quad_weights.resize(quad_rule); //Resize quadweights to appropriate size
@@ -290,7 +287,7 @@ void FE::assemble(Eigen::MatrixXd x,double penal){
     int col1;
     int row2;
     int col2;
-    for(int ele = 0; ele < nel ; ele++){
+    for(unsigned int ele = 0; ele < nel ; ele++){
         if(elx == nelx_){
             elx = 0;
             ely++;

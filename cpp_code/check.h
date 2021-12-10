@@ -2,8 +2,7 @@
 #define CHECK_h
 
 #include <stddef.h>
-//#include <Eigen/Dense>
-#include <Eigen>
+#include "Eigen"
 
 using namespace Eigen;
 
