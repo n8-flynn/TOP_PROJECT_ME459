@@ -20,7 +20,7 @@
 typedef Eigen::Matrix<double, Eigen::Dynamic, Eigen::Dynamic> MatrixXd;
 class FE{
     public:
-        FE(unsigned int nelx,unsigned int nely,unsigned int length, unsigned int breadth,double youngs_mod, double pois_rat); // The constructor takes the required arguments
+        FE(unsigned int nelx,unsigned int nely,double length, double breadth,double youngs_mod, double pois_rat); // The constructor takes the required arguments
         double basis_function(unsigned int node, double xi,double eta); //Calculates the basis function corresponding to the node "node" and at the point 'xi' and 'eta' in the parametric space
         std::vector<double> basis_gradient(unsigned int node, double xi,double eta); //Calculates the gradient of the basis function - similar to above
         void mesh(unsigned int no_quad_points); // Function to mesh the domain - Fills the Nodal connectivity and the Elemental Conncectivity matrices - Can even handle different number of elements along each axis
@@ -32,18 +32,20 @@ class FE{
         void cal_k_local(); // Calculates the K local for one element - As all elements are the same, can use the same klocal
         void assemble(Eigen::MatrixXd x,double penal); //Uses the klocal to assemble K global using the volume fractions
         Eigen::VectorXd solve(); // Solves and returns U which is then used in the toplogy code
+        void fem_to_vtk();
 
 
         // Class datastructures
         double L,B,g1,f1,E,nu,lambda,mu,penal_,detJ; //Standard constants - L - Length, B - breadth, g1 - Dirichlet conditon, E - Youngs Modulus, nu - Poissons ration, lambda and mu
         // are the lame's parameters
-        unsigned int nelx_,nely_,nel,nnx,nny,no_of_nodes,no_of_nodes_per_element,total_dofs,dofs_per_ele,quad_rule,dim; // standard mesh descriptions
+        unsigned int nelx_,nely_,nel,nnx_,nny_,no_of_nodes,no_of_nodes_per_element,total_dofs,dofs_per_ele,quad_rule,dim; // standard mesh descriptions
 
 
         std::vector<std::vector<double> > NC; //Nodal Connectivity - NC[i] gives the x and y - coordinate of the ith global node. Size - (No.of nodes, dim)
 //        std::vector<std::vector<double> > Klocal;
         Eigen::MatrixXd Klocal;
-        std::vector<std::vector<int> > EC; //Elemental connectivity - EC[i][j] gives the global node number for local node j in element i - Size - (No. of elements, No. of nodes per element)
+        std::vector<std::vector<int> > EC_2;//Elemental connectivity - EC[i][j] gives the global node number for local node j in element i - Size - (No. of elements, No. of nodes per element)
+
         std::vector<double> boundary_values; // Vector having the dirichlet boundary value wherever its defined and 0 in all other entries - Size (No. of nodes)
         std::vector< unsigned int > boundary_nodes; //Vector having all the nodes that are part of the dirichlet boundary - Size depends on the number of dirichlet nodes
         std::vector<std::vector<double> > quad_points; // Vector for the location of the quad points in terms of xi
