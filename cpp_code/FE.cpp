@@ -342,7 +342,7 @@ Eigen::VectorXd FE::solve(){
     Eigen::SimplicialLDLT<Eigen::SparseMatrix<double> > solver;
     solver.compute(K);
     U = solver.solve(F);
-    //std::cout<<U<<std::endl;
+    std::cout<<U<<std::endl;
     return U;
 }
 
