@@ -42,16 +42,8 @@ MatrixXd top(unsigned int nelx, unsigned int nely, double volfrac, double penal,
     fe_object.define_boundary_condition(force,g);
     fe_object.cal_k_local();
 	
-	bool done = false; 
-	if (change > 0.01) {
-
-	}
-	while (!done) {
+	while (loop < 1000) {
 		
-		if (change > 0.01) {
-			done = true; 
-		}
-
 		loop++;
 		xold = x;
 
@@ -72,23 +64,23 @@ MatrixXd top(unsigned int nelx, unsigned int nely, double volfrac, double penal,
                 		mat_res = Ue.transpose()*fe_object.Klocal * Ue;
                 		// FE implementation is all in mat_res
                 		c += pow(x(ely, elx), penal)* mat_res; //*(transpose of Ue) * KE * Ue
-						dc(ely, elx) = -penal * pow(x(ely, elx), (penal - 1)); //*(transpose of Ue) * KE * Ue;
+						dc(ely, elx) = -penal * pow(x(ely, elx), (penal - 1))*mat_res; //*(transpose of Ue) * KE * Ue;
 			}
 		}
-
-	// Function check below causes Eigen errors (has to be something small in the function)
-	dc = check(nelx, nely, rmin, x, dc);
-	
-	//Function OC below causes Eigen errors (has to be something small in the function)
-	x = OC(nelx, nely,volfrac, x, dc); 
+		// Function check below causes Eigen errors (has to be something small in the function)
+		dc = check(nelx, nely, rmin, x, dc);
+//		cout << dc << endl;
+		//Function OC below causes Eigen errors (has to be something small in the function)
+		x = OC(nelx, nely,volfrac, x, dc); 
 
 		MatrixXd xchange = (x - xold);
 
 		change = abs(xchange.maxCoeff());
 
-		printf("\nIteration # %d, change = %d\n",loop,change); 
-
-		}
+		printf("\nIteration # %d, change = %f\n\n",loop,change); 
+		//std::cout <<xold << endl;
+		std::cout << x << endl;
+	}
 
 	return x;
 }

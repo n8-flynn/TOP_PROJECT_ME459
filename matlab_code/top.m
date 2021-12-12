@@ -42,13 +42,25 @@ while change > dif_change  % While loop that increments the contents inside
 % PLOT DENSITIES  
   colormap(gray); imagesc(-x); axis equal; axis tight; axis off;pause(1e-6);
 %   pause(1);
+
+if change < dif_change
+    csvwrite('density_field.csv',x);
+end
 end 
 %%%%%%%%%% OPTIMALITY CRITERIA UPDATE %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 function [xnew]=OC(nelx,nely,x,volfrac,dc)  
 l1 = 0; l2 = 100000; move = 0.2;
 while (l2-l1 > 1e-4)
-  lmid = 0.5*(l2+l1);
-  xnew = max(0.001,max(x-move,min(1.,min(x+move,x.*sqrt(-dc./lmid)))));
+    lmid = 0.5*(l2+l1); %eq 1
+    xnew = max(0.001,max(x-move,min(1.,min(x+move,x.*sqrt(-dc./lmid)))));
+    m1 = x - move; %eq 2
+    m2 = x + move; %eq 3
+    m3 = x.*sqrt(-dc./lmid); %eq 4t
+    mmax = max(m1); %eq 5
+    mmin = min(m2) %eq 6
+    sqrtMin = min(m3); %eq 7
+    xnew = xnew; %eq 8
+    summm = sum(sum(xnew)); %eq 9
   if sum(sum(xnew)) - volfrac*nelx*nely > 0
     l1 = lmid;
   else
@@ -65,7 +77,6 @@ for i = 1:nelx
       for l = max(j-floor(rmin),1):min(j+floor(rmin),nely)
         fac = rmin-sqrt((i-k)^2+(j-l)^2);
         sum = sum+max(0,fac);
-        dcn(j,i) = dcn(j,i) + max(0,fac)*x(l,k)*dc(l,k);
       end
     end
     dcn(j,i) = dcn(j,i)/(x(j,i)*sum);

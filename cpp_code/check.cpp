@@ -20,7 +20,7 @@ MatrixXd check(int nelx, int nely, int rmin, MatrixXd x, MatrixXd dc)
 	MatrixXd dcn(nely, nelx); //Dcn is a matrix that is nelx by nely.
 	
 	dcn.setZero(); //Initializes the Dcn matrix to all zeros. 
-
+	//cout << dc << endl;
 	for (int i = 0; i < nelx; i++) // i increases when it less than nelx
 	{
 		for (int j = 0; j < nely; j++) 
@@ -39,13 +39,15 @@ MatrixXd check(int nelx, int nely, int rmin, MatrixXd x, MatrixXd dc)
 
 				for (int l = max_j; l < min_j; l++)
 				{
-					fac = rmin - sqrt(pow(i - k, 2) + pow(j - l, 2));
+					fac = rmin - sqrt(pow((i - k), 2) + pow((j - l), 2));
 					sum += max(0., fac);
 					dcn(j, i) += max(0., fac) * x(l , k) * dc(l, k);
 				}
 			}
 			dcn(j, i) = dcn(j, i) / (x(j, i) * sum);
+			//cout << dcn << endl;
 		}
 	} 
+	//cout << dcn << endl;
 	return dcn;
 }
