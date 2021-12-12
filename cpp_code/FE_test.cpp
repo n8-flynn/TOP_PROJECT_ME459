@@ -14,18 +14,18 @@ int main(){
 	unsigned int no_quad_points = 3; // For quad, this means 9
     unsigned int nelx = 20; // Number of elements along x
     unsigned int nely = 10; // Number of elements along y
-    double length = 1; // Length
-    double breadth = 1; // Breadth
-    double penal = 2;
+    double length = 1.; // Length
+    double breadth = 1.; // Breadth
+    double penal = 2.;
 //    double youngs_mod = 2 * pow(10,11);
-    double youngs_mod = 1;
+    double youngs_mod = 1.;
     double pois_rat = 0.3;
     double force = 1.;
     double g = 0.;
     Eigen::MatrixXd x; // This is the Vol frac matrix
     // Since nely is the number of rows and nelx is the number of columns
     x.resize(nely,nelx);
-    x.setConstant(nely,nelx,0.5);
+    x.setConstant(nely,nelx,1);
     FE tr(nelx,nely,length,breadth,youngs_mod,pois_rat);
     tr.mesh(no_quad_points);
     tr.init_data_structs();
@@ -50,5 +50,6 @@ int main(){
     double elapsed_total_2 = elapsed_sec_2 + (double)elapsed_nsec_2 / (double)NSEC_PER_SEC;
 
     printf("Time taken for solution of linear system %g \n",elapsed_total_2 * 1000);
+    tr.fem_to_vtk();
 
 }

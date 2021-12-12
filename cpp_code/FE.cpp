@@ -6,7 +6,7 @@
 
 // Constructor
 
-FE::FE(unsigned int nelx, unsigned int nely, unsigned int length, unsigned int breadth, double youngs_mod, double pois_rat){
+FE::FE(unsigned int nelx, unsigned int nely, double length, double breadth, double youngs_mod, double pois_rat){
 	L = length;
 	B = breadth;
 	nelx_ = nelx;
@@ -24,13 +24,13 @@ inline double FE::basis_function(unsigned int node , double xi, double eta){
             output = 0.25 * (1-xi) * (1-eta);
             break;
         case 1:
-            output = 0.25 * (1-xi) * (1+eta);
+            output = 0.25 * (1+xi) * (1-eta);
             break;
         case 2:
             output = 0.25 * (1+xi) * (1+eta);
             break;
         case 3:
-            output = 0.25 * (1+xi) * (1-eta);
+            output = 0.25 * (1-xi) * (1+eta);
             break;
         default:
             std::cout<<"There is no "<<node<<" node, invalid input"<<std::endl;
@@ -50,14 +50,14 @@ inline std::vector<double> FE::basis_gradient(unsigned int node,double xi, doubl
             break;
         case 1:
             bg[0] = 0.25 * (1 - eta);
-            bg[1] = -0.25 * (1 - xi);
+            bg[1] = -0.25 * (1 + xi);
             break;
         case 2:
-            bg[0] = 0.25 * (1 - eta);
-            bg[1] = 0.25 * (1 - xi);
+            bg[0] = 0.25 * (1 + eta);
+            bg[1] = 0.25 * (1 + xi);
             break;
         case 3:
-            bg[0] = -0.25 * (1 - eta);
+            bg[0] = -0.25 * (1 + eta);
             bg[1] = 0.25 * (1 - xi);
             break;
         default:
@@ -111,41 +111,37 @@ void FE::mesh(unsigned int no_quad_points){
     no_of_nodes_per_element = 4;
     // Since each node has more than 1 dof, the dofs per element will be the no of nodes per element * dimensions
     dofs_per_ele = no_of_nodes_per_element * dim;
-    nel = nelx_ * nely_;
-    EC.resize(nel);
+    nel = nelx_ * nely_;//    Remove beow part after testing - Only for the purpose of testing
+    
+    EC_2.resize(nel);
     // Since EC is a vector of a vector , we need to initialize each row of EC
     for(unsigned int i = 0; i < nel; i++){
         // Over here we have to use dofs_per_ele as these will be the number of columns in EC
-        EC[i] = std::vector<int>(dofs_per_ele);
+        EC_2[i] = std::vector<int>(no_of_nodes_per_element);
     }
-    nnx = nelx_ + 1; // Number of nodes along x
-    nny = nely_ + 1; // Number of nodes along y
-    unsigned int dofs_x = nnx * 2; // Number of dofs along x
-    unsigned int dofs_y = nny * 2; // Number of dofs along y
-    int inc_x = 0; // Tells how many increments we have had in x
-    int inc_y = 0; // Tells how many increments we have had in y
-    unsigned int n_count = 0;
+    
+    
+    nnx_ = nelx_ + 1; // Number of nodes along x
+    nny_ = nely_ + 1; // Number of nodes along y
+    int inc_x_ = 0; // Tells how many increments we have had in x
+    int inc_y_ = 0; // Tells how many increments we have had in y
     
     // Construct EC - EC[i][j] gives the global node number for local node j in element i
     for(unsigned int i = 0; i < nel;i++){
 //            If we have reached last node on x, we increment y and reset our x coutner
-        if(inc_x == dofs_x - 2){
-            inc_y+=2;
-            inc_x = 0;
+        if(inc_x_ == nnx_ - 1){
+            inc_y_+=1;
+            inc_x_ = 0;
         }
-//      Storing clockwise on each element - pattern was hand derived using some examples for lesser number of elements
-//		Node numbers increase left to right. Inc_y takes us to the nodes of the element 1 level down
-        EC[i][0] = n_count + inc_y;
-        EC[i][1] = EC[i][0] + 1;
-        EC[i][2] = EC[i][1] + 1;
-        EC[i][3] = EC[i][2] + 1;
-        EC[i][4] = dofs_x + n_count + inc_y + 2; //Clock wise direction
-        EC[i][5] = EC[i][4] + 1;
-        EC[i][6] = dofs_x + n_count + inc_y;
-        EC[i][7] = EC[i][6] + 1;
-        inc_x += 2;
-        n_count +=2;
+//            Storing clockwise on each element - pattern was hand derived using some examples for lesser number of elements
+//            Node numbers increase left to right. Inc_y takes us to the nodes of the element 1 level down
+        EC_2[i][0] = i + inc_y_;
+        EC_2[i][1] = i + 1 + inc_y_;
+        EC_2[i][2] = nnx_ + 1 + i + inc_y_;
+        EC_2[i][3] = nnx_ + i + inc_y_;
+        inc_x_ += 1;
     }
+    
     // Set up quadrature data - Cant change number of quad points for now - Can include functionality with simple if-else if needed
     quad_rule = no_quad_points;
     quad_points.resize(quad_rule); //Resize quadpoints to appropriate size
@@ -207,7 +203,6 @@ void saveData(std::string fileName, Eigen::MatrixXd  matrix)
 void FE::init_data_structs(){
     std::cout<<"Initializing data structures"<<std::endl;
     K.resize(total_dofs,total_dofs); //Resize K
-//    K.setZero(total_dofs,total_dofs); // Initialize K to 0
     F.resize(total_dofs); //Resize F
     F.setZero(total_dofs); // Setting F to zero here itself since we know the size
     U.resize(total_dofs); //Resive d
@@ -231,13 +226,13 @@ inline void FE::cal_jac(unsigned int q1, unsigned int q2){
             // Looping through the nodes of an element
             for(unsigned int A = 0; A < no_of_nodes_per_element; A ++){
                 // Over here dim*A is used because EC has dim dofs per node. Each of these dofs have the same coordinate, so we can pick either one while calculating the jacobian. Over here, we use all the even dofs
-                Jac(i,j) += NC[EC[0][dim*A]][i] * basis_gradient(A, quad_points[q1][i], quad_points[q2][j])[j];
+                Jac(i,j) += NC[dim*EC_2[0][A]][i] * basis_gradient(A, quad_points[q1][0], quad_points[q2][1])[j];
             }
         }
     }
     detJ = Jac.determinant();
     invJ = Jac.inverse();
-    saveData("invJ.csv", invJ);
+//    saveData("invJ.csv", invJ);
 }
 
 void FE::cal_k_local(){
@@ -278,6 +273,7 @@ void FE::cal_k_local(){
             }
         }
     }
+//    saveData("k_local.csv", Klocal);
 }
 
 
@@ -286,6 +282,11 @@ void FE::assemble(Eigen::MatrixXd x,double penal){
     unsigned int ely = 0;
     unsigned int elx = 0;
     double x_;
+//    These are all dummy variables
+    int row1;
+    int col1;
+    int row2;
+    int col2;
     for(unsigned int ele = 0; ele < nel ; ele++){
         if(elx == nelx_){
             elx = 0;
@@ -294,14 +295,22 @@ void FE::assemble(Eigen::MatrixXd x,double penal){
         x_ = x(ely,elx);
         elx++;
         // Now we assemble the Klocal into the K matrix which is the global matrix
-        for(unsigned int I = 0; I < dofs_per_ele ; I++){
-            for(unsigned int J = 0; J < dofs_per_ele ; J++){
-                K.coeffRef(EC[ele][I],EC[ele][J]) += pow(x_,penal) * Klocal(I,J);
+        for(unsigned int I = 0; I < no_of_nodes_per_element ; I++){
+            row1 = dim*EC_2[ele][I];
+            row2 = dim*I;
+            for(unsigned int J = 0; J < no_of_nodes_per_element ; J++){
+                col1 = dim*EC_2[ele][J];
+                col2 = dim*J;
+                K.coeffRef(row1,col1) += pow(x_,penal) * Klocal(row2,col2);
+                K.coeffRef(row1,col1+1) += pow(x_,penal) * Klocal(row2,col2+1);
+                K.coeffRef(row1+1,col1) += pow(x_,penal) * Klocal(row2+1,col2);
+                K.coeffRef(row1+1,col1+1) += pow(x_,penal) * Klocal(row2+1,col2+1);
+                
             }
         }
     }
 //    std::cout << "The determinant of K is " << K.determinant() << std::endl;
-    saveData("k_before.csv", K);
+//    saveData("k_before.csv", K);
     // Now we apply the Dirichlet boundary conditons and modify K accordingly
     std::cout<<"Applying Dirichlet BC's"<<std::endl;
     for(unsigned int i : boundary_nodes){
@@ -325,7 +334,7 @@ void FE::assemble(Eigen::MatrixXd x,double penal){
         F[i] = g;
     }
 //    std::cout << "After applying BC the determinant of K is " << K.determinant() << std::endl;
-    saveData("k_after.csv", K);
+//    saveData("k_after.csv", K);
 //    std::cout<<K<<std::endl;
 }
 Eigen::VectorXd FE::solve(){
@@ -337,4 +346,76 @@ Eigen::VectorXd FE::solve(){
     return U;
 }
 
+void FE::fem_to_vtk(){
+        
+    // Write to file all the stuff that is needed for plotting
+    std::cout<<"Writing to vtu file for steady state"<<std::endl;
+    std::ofstream out_file;
+    std::stringstream ss;
+    ss<<"trial.vtu";
+    std::string f_name;
+    f_name+= ss.str();
+//        out_file.open("res/output_" + std::to_string(scheme) + std::to_string(t_step) +  ".vtu");
+    out_file.open(f_name);
+    if(out_file.fail()){
+        std::cout<<"File did not open"<<std::endl;
+    }
+//   Writing headers
+    out_file<<"<?xml version=\"1.0\"?>"<<std::endl;
+    out_file<<"<VTKFile type=\"UnstructuredGrid\"  version=\"0.1\"  >"<<std::endl;
+    out_file<<"<UnstructuredGrid>"<<std::endl;
+//    Writing nodal coordinates array
+    out_file<<"<Piece  NumberOfPoints=\""<<no_of_nodes<<"\" NumberOfCells=\""<<nel<<"\">"<<std::endl;
+    out_file<<"<Points>"<<std::endl;
+    out_file<<"<DataArray type=\"Float32\" NumberOfComponents=\""<<dim+1<<"\" format=\"ascii\">"<<std::endl;
+    float z = 0.;
+    for(int node = 0; node < total_dofs; node = node+2){
+        out_file<<(float) NC[node][0]<<" "<<(float) NC[node][1]<<" "<<z<<std::endl;
+    }
+    out_file<<"</DataArray>"<<std::endl;
+    out_file<<"</Points>"<<std::endl;
+    
+//    Writing Element connectivity
+    out_file<<"<Cells>"<<std::endl;
+    out_file<<"<DataArray  type=\"UInt32\"  Name=\"connectivity\"  format=\"ascii\">"<<std::endl;
+    for(int ele = 0; ele < nel; ele++){
+        out_file<<EC_2[ele][0]<<" "<<EC_2[ele][1]<<" "<<EC_2[ele][2]<<" "<<EC_2[ele][3]<<std::endl;
+    }
 
+    out_file<<"</DataArray>"<<std::endl;
+//    Writing element offsets vector(required in VTK format)
+    unsigned int offsets = 0;
+    out_file<<"<DataArray  type=\"UInt32\"  Name=\"offsets\"  format=\"ascii\">"<<std::endl;
+
+    for(int ele = 0; ele < nel; ele++){
+        offsets=offsets+4;
+        out_file<<offsets<<std::endl;
+    }
+
+
+//    Writing element types vector(required in VTK format)
+    out_file<<"</DataArray>"<<std::endl;
+    out_file<<"<DataArray  type=\"UInt8\"  Name=\"types\"  format=\"ascii\">"<<std::endl;
+    unsigned int ty = 9;
+    for(int ele = 0; ele < nel; ele++){
+        out_file<<ty<<std::endl;
+    }
+    out_file<<"</DataArray>"<<std::endl;
+    out_file<<"</Cells>"<<std::endl;
+//    Writing field values (if any) array
+    
+    out_file<<"<PointData  Scalars=\"u\">"<<std::endl;
+    out_file<<"<DataArray  type=\"Float32\"  Name=\"Displacement\" NumberOfComponents=\"3\" format=\"ascii\">"<<std::endl;
+    float z1 = 0;
+    for(int node = 0; node < total_dofs; node=node+2){
+        out_file<<(float)U(node)<<" "<<(float)U(node+1)<<" "<<z1<<std::endl;
+//        out_file<<(float)d_n(node)<<std::endl;
+    }
+    out_file<<"</DataArray>"<<std::endl;
+    out_file<<"</PointData> "<<std::endl;
+    out_file<<"</Piece> "<<std::endl;
+    out_file<<"</UnstructuredGrid> "<<std::endl;
+    out_file<<"</VTKFile> "<<std::endl;
+    out_file.close();
+        
+}
