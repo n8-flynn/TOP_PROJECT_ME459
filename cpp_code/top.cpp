@@ -25,7 +25,7 @@ MatrixXd top(unsigned int nelx, unsigned int nely, double volfrac, double penal,
 	//! This defines the number of quadrature points we use to integrate our finite dimensional weak form in order to compute K elemental - Over here we use the 3 point guass quad
 	//! rule as this is sufficient to compute the eintegration exactly
 	
-	unsigned int no_quad_points = 3; //! Domain dimensions
+	uint8_t no_quad_points = 3; //! Domain dimensions
 	double length = 1; //! Length
 	double breadth = 1; //! Breadth 
    	double youngs_mod = 1; //! Youngs Modulus of the material
@@ -49,15 +49,15 @@ MatrixXd top(unsigned int nelx, unsigned int nely, double volfrac, double penal,
 
 		fe_object.assemble(x,penal);
 		U = fe_object.solve();
-        unsigned int ele_no;
-        vector<int> global_nodes;
+        unsigned short int ele_no;
+        vector<unsigned short int> global_nodes;
         VectorXd Ue;
         Ue.resize(fe_object.dofs_per_ele);
         	
 		double mat_res = 0;
 
-		for (int ely = 0; ely < nely; ely++) {
-			for (int elx = 0; elx < nelx; elx++) {
+		for (unsigned short int ely = 0; ely < nely; ely++) {
+			for (unsigned short int elx = 0; elx < nelx; elx++) {
                			ele_no = ely * nelx + elx;
                 		global_nodes = fe_object.EC[ele_no];
                 		Ue = U(global_nodes);

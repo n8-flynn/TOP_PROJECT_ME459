@@ -6,7 +6,7 @@
 
 // Constructor
 
-FE::FE(unsigned int nelx, unsigned int nely, double length, double breadth, double youngs_mod, double pois_rat){
+FE::FE(unsigned short int nelx, unsigned short int nely, double length, double breadth, double youngs_mod, double pois_rat){
 	L = length;
 	B = breadth;
 	nelx_ = nelx;
@@ -16,7 +16,7 @@ FE::FE(unsigned int nelx, unsigned int nely, double length, double breadth, doub
 }
 
 // Basis function - Internal function needed for fe implementation
-inline double FE::basis_function(unsigned int node , double xi, double eta){
+inline double FE::basis_function(unsigned short int node , double xi, double eta){
 //Kind of hard coded for a bilinear shape function for wuad and linear for triangular - Based on node number, a formual will be choosen using switch-case, then based on the quad point , xi and eta will be substituted to return the value
     double output;
     switch(node) {
@@ -39,7 +39,7 @@ inline double FE::basis_function(unsigned int node , double xi, double eta){
 	return output;
 }
 // Basis function defined using the general formula obtained from
-inline std::vector<double> FE::basis_gradient(unsigned int node,double xi, double eta){
+inline std::vector<double> FE::basis_gradient(unsigned short int node,double xi, double eta){
 // Hard coding the basis gradient as could not derive/find the general formula in the case of 2D - maybe its just a multiplication.
     
     std::vector<double> bg(dim,0.0);
@@ -67,7 +67,7 @@ inline std::vector<double> FE::basis_gradient(unsigned int node,double xi, doubl
     return bg;
 }
 
-void FE::mesh(unsigned int no_quad_points){
+void FE::mesh(uint8_t no_quad_points){
 	std::cout<<"Generating Mesh .."<<std::endl;
 
     // The number of nodes is just an extension of 1D
@@ -95,7 +95,7 @@ void FE::mesh(unsigned int no_quad_points){
     double y = 0.0;
     // Construct NC - NC[i][0] gives the x - coordinate of the ith global node, NC[i][1] gives the y
     // Here, 2 dofs make up one node and hence pairs of dofs will have the same coordinates
-    for(unsigned int i = 0; i < total_dofs - 1 ; i = i + dim){
+    for(unsigned short int i = 0; i < total_dofs - 1 ; i = i + dim){
         NC[i][0] = x;
         NC[i+1][0]  = x; 
         x += incr_x;
@@ -116,20 +116,20 @@ void FE::mesh(unsigned int no_quad_points){
     EC_2.resize(nel);
     EC.resize(nel);
     // Since EC is a vector of a vector , we need to initialize each row of EC
-    for(unsigned int i = 0; i < nel; i++){
+    for(unsigned short int i = 0; i < nel; i++){
         // Over here we have to use dofs_per_ele as these will be the number of columns in EC
-        EC[i] = std::vector<int>(dofs_per_ele);
-        EC_2[i] = std::vector<int>(no_of_nodes_per_element);
+        EC[i] = std::vector<unsigned short int>(dofs_per_ele);
+        EC_2[i] = std::vector<unsigned short int>(no_of_nodes_per_element);
     }
     
     
     nnx_ = nelx_ + 1; // Number of nodes along x
     nny_ = nely_ + 1; // Number of nodes along y
-    int inc_x_ = 0; // Tells how many increments we have had in x
-    int inc_y_ = 0; // Tells how many increments we have had in y
+    unsigned short int inc_x_ = 0; // Tells how many increments we have had in x
+    unsigned short int inc_y_ = 0; // Tells how many increments we have had in y
     
     // Construct EC - EC[i][j] gives the global node number for local node j in element i
-    for(unsigned int i = 0; i < nel;i++){
+    for(unsigned short int i = 0; i < nel;i++){
 //            If we have reached last node on x, we increment y and reset our x coutner
         if(inc_x_ == nnx_ - 1){
             inc_y_+=1;
@@ -144,15 +144,15 @@ void FE::mesh(unsigned int no_quad_points){
         inc_x_ += 1;
     }
     
-    int nnx = nelx_ + 1; // Number of nodes along x
-    int nny = nely_ + 1; // Number of nodes along y
-    unsigned int dofs_x = nnx * 2; // Number of dofs along x
-    unsigned int dofs_y = nny * 2; // Number of dofs along y
-    int inc_x = 0; // Tells how many increments we have had in x
-    int inc_y = 0; // Tells how many increments we have had in y
-    unsigned int n_count = 0;
+    unsigned short int nnx = nelx_ + 1; // Number of nodes along x
+    unsigned short int nny = nely_ + 1; // Number of nodes along y
+    unsigned short int dofs_x = nnx * 2; // Number of dofs along x
+    unsigned short int dofs_y = nny * 2; // Number of dofs along y
+    unsigned short int inc_x = 0; // Tells how many increments we have had in x
+    unsigned short int inc_y = 0; // Tells how many increments we have had in y
+    unsigned short int n_count = 0;
     // Construct EC - EC[i][j] gives the global node number for local node j in element i
-    for(unsigned int i = 0; i < nel;i++){
+    for(unsigned short int i = 0; i < nel;i++){
    //            If we have reached last node on x, we increment y and reset our x coutner
            if(inc_x == dofs_x - 2){
                inc_y+=2;
@@ -174,7 +174,7 @@ void FE::mesh(unsigned int no_quad_points){
     // Set up quadrature data - Cant change number of quad points for now - Can include functionality with simple if-else if needed
     quad_rule = no_quad_points;
     quad_points.resize(quad_rule); //Resize quadpoints to appropriate size
-    for(unsigned int i = 0; i < quad_rule; i++){
+    for(uint8_t i = 0; i < quad_rule; i++){
         quad_points[i] = std::vector<double>(dim);
     }
     quad_weights.resize(quad_rule); //Resize quadweights to appropriate size
@@ -200,14 +200,14 @@ void FE::define_boundary_condition(double force, double g){
 //    At each dof which is a boundary, we will put the value of g1, else we will put 0
     boundary_values.resize(total_dofs);
 //    This function defines the boundary condition for a cantilivered beam i.e. all dofs at x = 0 have 0 displacement
-    for(unsigned int dof_no = 0; dof_no < total_dofs ; dof_no++){
+    for(unsigned short int dof_no = 0; dof_no < total_dofs ; dof_no++){
         if(NC[dof_no][0] == 0){
             boundary_values[dof_no] = g1;
             boundary_nodes.push_back(dof_no);
         }
     }
     // We define the F matrix fully here itself as we have no body force and just a force on the bottom right node acting downwards - Note, the way NC is set up, downwards is +ve Y axis and east is +ve x axis
-    for(unsigned int dof_no = 0; dof_no < total_dofs ; dof_no++){
+    for(unsigned short int dof_no = 0; dof_no < total_dofs ; dof_no++){
         if((abs(NC[dof_no][0] - L) < 0.00001) && (abs(NC[dof_no][1] - B) < 0.00001)){
             F[dof_no] = 0; // There are 2 dofs that satisfy this constraint - the first one is the x dof so this will be 0
             F[dof_no + 1] = f1; // The second dof is the y dof and this sbould have a force
@@ -239,21 +239,21 @@ void FE::init_data_structs(){
 
 // Function for calculating the value of C - elasticity tensor
 
-inline double FE::C(unsigned int i, unsigned int j, unsigned int k, unsigned int l){
+inline double FE::C(uint8_t i, uint8_t j, uint8_t k, uint8_t l){
     double lambda = (E * nu)/((1. + nu) * (1. - 2.*nu));
     double mu = E/(2. *(1. + nu));
     return lambda * (i==j) * (k==l) + mu * ((i==k)*(j==l) + (i==l)* (j==k));
 }
 
-inline void FE::cal_jac(unsigned int q1, unsigned int q2){
+inline void FE::cal_jac(uint8_t q1, uint8_t q2){
     Eigen::MatrixXd Jac;
     Jac.resize(dim,dim);
     invJ.resize(dim,dim);
-    for(unsigned int i = 0; i < dim; i++){
-        for(unsigned int j = 0; j < dim; j++){
+    for(uint8_t i = 0; i < dim; i++){
+        for(uint8_t j = 0; j < dim; j++){
             Jac(i,j) = 0;
             // Looping through the nodes of an element
-            for(unsigned int A = 0; A < no_of_nodes_per_element; A ++){
+            for(unsigned short int A = 0; A < no_of_nodes_per_element; A++){
                 // Over here dim*A is used because EC has dim dofs per node. Each of these dofs have the same coordinate, so we can pick either one while calculating the jacobian. Over here, we use all the even dofs
                 Jac(i,j) += NC[dim*EC_2[0][A]][i] * basis_gradient(A, quad_points[q1][0], quad_points[q2][1])[j];
             }
@@ -275,20 +275,20 @@ void FE::cal_k_local(){
     
 
 //    std::fill(Klocal.begin(), Klocal.end(), std::vector<double>(dofs_per_ele, 0.));
-    for(unsigned int q1 = 0; q1 < quad_rule ; q1++){
-        for(unsigned int q2 = 0; q2 < quad_rule ; q2++){
+    for(uint8_t q1 = 0; q1 < quad_rule ; q1++){
+        for(uint8_t q2 = 0; q2 < quad_rule ; q2++){
             cal_jac(q1,q2);
             // Now we go ahead and fill in the Klocal array
-            for(unsigned int A = 0; A < no_of_nodes_per_element; A++){
+            for(unsigned short int A = 0; A < no_of_nodes_per_element; A++){
                 // Capital I and K denote the physical coordinates
-                for(unsigned int I = 0; I < dim; I++){
-                    for(unsigned int B=0 ; B < no_of_nodes_per_element; B++){
-                        for(unsigned int K = 0; K < dim; K++){
-                            for(unsigned int J = 0; J < dim; J++){
-                                for(unsigned int L = 0; L < dim; L++){
+                for(uint8_t I = 0; I < dim; I++){
+                    for(unsigned short int B=0 ; B < no_of_nodes_per_element; B++){
+                        for(uint8_t K = 0; K < dim; K++){
+                            for(uint8_t J = 0; J < dim; J++){
+                                for(uint8_t L = 0; L < dim; L++){
                                     // Looping over the parametric coordinates - I think we only need to loop over j and k since only those indicies are used - Not sure though
-                                    for(unsigned int j = 0; j < dim; j++){
-                                        for(unsigned int l = 0; l < dim; l++){
+                                    for(uint8_t j = 0; j < dim; j++){
+                                        for(uint8_t l = 0; l < dim; l++){
                                             // Added i and k since we maybe do need it - Need to figure out how to reduce these number of loops - Will be too slow
                                             Klocal(dim*A + I,dim*B + K) += (basis_gradient(A, quad_points[q1][0], quad_points[q2][1])[j] * invJ(j,J)) * C(I,J,K,L) * (basis_gradient(B, quad_points[q1][0], quad_points[q2][1])[l] * invJ(l,L)) * detJ * quad_weights[q1] * quad_weights[q2];
                                         }
@@ -308,15 +308,15 @@ void FE::cal_k_local(){
 
 void FE::assemble(Eigen::MatrixXd x,double penal){
     std::cout<<"Assembling and applying dirichlet conditions"<<std::endl;
-    unsigned int ely = 0;
-    unsigned int elx = 0;
+    unsigned short int ely = 0;
+    unsigned short int elx = 0;
     double x_;
 //    These are all dummy variables
-    int row1;
-    int col1;
-    int row2;
-    int col2;
-    for(unsigned int ele = 0; ele < nel ; ele++){
+    unsigned short int row1;
+    unsigned short int col1;
+    unsigned short int row2;
+    unsigned short int col2;
+    for(unsigned short int ele = 0; ele < nel ; ele++){
         if(elx == nelx_){
             elx = 0;
             ely++;
@@ -324,10 +324,10 @@ void FE::assemble(Eigen::MatrixXd x,double penal){
         x_ = x(ely,elx);
         elx++;
         // Now we assemble the Klocal into the K matrix which is the global matrix
-        for(unsigned int I = 0; I < no_of_nodes_per_element ; I++){
+        for(unsigned short int I = 0; I < no_of_nodes_per_element ; I++){
             row1 = dim*EC_2[ele][I];
             row2 = dim*I;
-            for(unsigned int J = 0; J < no_of_nodes_per_element ; J++){
+            for(unsigned short int J = 0; J < no_of_nodes_per_element ; J++){
                 col1 = dim*EC_2[ele][J];
                 col2 = dim*J;
                 K.coeffRef(row1,col1) += pow(x_,penal) * Klocal(row2,col2);
@@ -342,10 +342,10 @@ void FE::assemble(Eigen::MatrixXd x,double penal){
 //    saveData("k_before.csv", K);
     // Now we apply the Dirichlet boundary conditons and modify K accordingly
     std::cout<<"Applying Dirichlet BC's"<<std::endl;
-    for(unsigned int i : boundary_nodes){
+    for(unsigned short int i : boundary_nodes){
         double g = boundary_values[i];
         // Loop to move the approprate column of K to the RHS - source - https://www.math.colostate.edu/~bangerth/videos.676.21.65.html
-        for(unsigned int row = 0; row < total_dofs; row++){
+        for(unsigned short int row = 0; row < total_dofs; row++){
             // This condition is so that a dof which has already been set in F is not changed
             if(row == i){
                 continue;
