@@ -6,46 +6,37 @@
 using namespace Eigen; 
 using namespace std; 
 
-MatrixXd check(int nelx, int nely, int rmin, MatrixXd x, MatrixXd dc) 
-{
-	int rmin_f = floor(rmin);
-	int max_i;
-	int min_i;
-	int k;
-	int max_j;
-	int min_j;
-	int l; 
-	double fac; 
-
-	MatrixXd dcn(nely, nelx); //Dcn is a matrix that is nelx by nely.
+MatrixXd check(int nelx, int nely, double rmin, MatrixXd x, MatrixXd dc) {
 	
-	dcn.setZero(); //Initializes the Dcn matrix to all zeros. 
+	int rmin_f = floor(rmin);
+	int i;
+	int j;
+	int k;
+	int l;
+	double fac = 0;
+	int val; //Used for testing only. 
+	double *sum = new double;
+	MatrixXd dcn(nely, nelx); //Dcn is a matrix that is nelx by nely.
+
+	
+	dcn.setConstant(0.0); //Initializes the Dcn matrix to all zeros. 
 	//cout << dc << endl;
-	for (int i = 0; i < nelx; i++) // i increases when it less than nelx
-	{
-		for (int j = 0; j < nely; j++) 
-		{
-			double sum = 0.0;
-
-			max_i = max(i - rmin_f, 1 );
-			min_i = min(i + rmin_f, nelx);
-
-			k = max_i;
-			
-			for (int k = max_i;k < min_i; k++) 
-			{
-				max_j = max(j - rmin_f, 1);
-				min_j = min(j + rmin_f, nely);
-
-				for (int l = max_j; l < min_j; l++)
-				{
-					fac = rmin - sqrt(pow((i - k), 2) + pow((j - l), 2));
-					sum += max(0., fac);
-					dcn(j, i) += max(0., fac) * x(l , k) * dc(l, k);
+	for (i = 0; i < nelx; i++) { // i increases when it less than nelx
+		for (j = 0; j < nely; j++) {
+			*sum = 0.0; 
+			for (k = max(i + 1 - rmin_f, 1);k <= min(i + 1 + rmin_f, nelx); k++) {
+				for (l = max(j + 1- rmin_f, 1); l <= min(j + 1 + rmin_f, nely); l++) {
+					val = pow(i + 1 - k, 2) + pow(j + 1 - l, 2);
+					fac = rmin - sqrt(pow(i + 1 - k, 2) + pow(j + 1 - l, 2));
+					*sum = *sum + max(0.0, fac);
+					dcn(j, i) += max(0.0, fac) * x(l-1, k-1) * dc(l-1, k-1);
 				}
 			}
-			dcn(j, i) = dcn(j, i) / (x(j, i) * sum);
+			dcn(j, i) = dcn(j, i) / (x(j, i) * (*sum));
+			//cout << ree << endl;
 			//cout << dcn << endl;
+			//cout << j << endl;
+			//cout << i << endl;
 		}
 	} 
 	//cout << dcn << endl;

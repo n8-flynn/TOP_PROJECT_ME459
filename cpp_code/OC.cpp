@@ -7,15 +7,8 @@ using namespace std;
 
 MatrixXd OC(unsigned int nelx, unsigned int nely, double volfrac,MatrixXd &x,MatrixXd &dc)
 {
-	//nelx is the number of elements in the x direction.
-	//nely is the number of elements in the y direction. 
-	//volfrac is the desired volume fraction.
-	//x is an array of densities.
-	//dc is ??
- 
 	double l1 = 0;
 	double l2 = 100000;
-	//double optimal = 0.001; 
 	double lmid;
 	
 	MatrixXd move(nely, nelx);

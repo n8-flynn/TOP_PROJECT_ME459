@@ -6,21 +6,17 @@
 using namespace Eigen;
 using namespace std;
 
-MatrixXd top(unsigned int nelx, unsigned int nely, double volfrac, double penal, double rmin)
-{
-	int loop = 0;
+MatrixXd top(unsigned int nelx, unsigned int nely, double volfrac, double penal, double rmin) {
+	int loop = 0; //Used to count the number of iterations in the output. 
 	double c = 0;
-	double change = 0.0;
+	double change = 0.0; //Set to the maximum change between x and xold (convergence criteria). 
 
 	MatrixXd x(nely, nelx);
-	MatrixXd dc(nely, nelx);
-	x.setConstant(volfrac);
+	MatrixXd dc(nely, nelx); 
+	x.setConstant(volfrac); //Sets all elements in matrix x to the volume fraction variable. 
 	MatrixXd xold;
 	VectorXd U;
 
-	//! Change is the small change in xold and xnew.
-	//! Sets the old volume fraction equal to the previous volume fraction x so thast you can compare the two volume fraction.
-	//! xold and x are then used to be compared to each other. 
 	//! Defining material properties required for the FEM code
 	//! This defines the number of quadrature points we use to integrate our finite dimensional weak form in order to compute K elemental - Over here we use the 3 point guass quad
 	//! rule as this is sufficient to compute the eintegration exactly
@@ -50,28 +46,28 @@ MatrixXd top(unsigned int nelx, unsigned int nely, double volfrac, double penal,
 		fe_object.assemble(x,penal);
 		U = fe_object.solve();
         unsigned int ele_no;
-        vector<int> global_nodes;
+        vector <int> global_nodes;
         VectorXd Ue;
         Ue.resize(fe_object.dofs_per_ele);
         	
 		double mat_res = 0;
 
 		for (int ely = 0; ely < nely; ely++) {
-			for (int elx = 0; elx < nelx; elx++) {
-               			ele_no = ely * nelx + elx;
-                		global_nodes = fe_object.EC_2[ele_no];
-                		Ue = U(global_nodes);
-						// Issue in line below (1x4) * (8x8) x (4x1) - needs to be same dimension
-						mat_res = Ue.transpose() * fe_object.Klocal * Ue;
-                		// FE implementation is all in mat_res
-                		c += pow(x(ely, elx ), penal)* mat_res; //*(transpose of Ue) * KE * Ue
-						dc(ely, elx) = -penal * pow(x(ely, elx), (penal - 1))*mat_res; //*(transpose of Ue) * KE * Ue;
+			for (int ely = 0; ely < nely; ely++) {
+				for (int elx = 0; elx < nelx; elx++) {
+					ele_no = ely * nelx + elx;
+					global_nodes = fe_object.EC[ele_no];
+					Ue = U(global_nodes);
+					mat_res = Ue.transpose() * fe_object.Klocal * Ue;
+					// FE implementation is all in mat_res
+					c += pow(x(ely, elx), penal) * mat_res; //*(transpose of Ue) * KE * Ue
+					dc(ely, elx) = -penal * pow(x(ely, elx), (penal - 1)) * mat_res; //*(transpose of Ue) * KE * Ue;
+				}
 			}
 		}
 		// Function check below causes Eigen errors (has to be something small in the function)
 		dc = check(nelx, nely, rmin, x, dc);
-//		cout << dc << endl;
-		//Function OC below causes Eigen errors (has to be something small in the function)
+
 		x = OC(nelx, nely,volfrac, x, dc); 
 
 		MatrixXd xchange = (x - xold);
@@ -79,10 +75,8 @@ MatrixXd top(unsigned int nelx, unsigned int nely, double volfrac, double penal,
 		change = abs(xchange.maxCoeff());
 
 		printf("\nIteration # %d, change = %f\n\n",loop,change); 
-		//std::cout <<xold << endl;
-		std::cout << x << endl;
 	}
-
+	cout << x << endl;
 	return x;
 }
 
