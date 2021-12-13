@@ -44,6 +44,7 @@ class FE{
         std::vector<std::vector<double> > NC; //Nodal Connectivity - NC[i] gives the x and y - coordinate of the ith global node. Size - (No.of nodes, dim)
 //        std::vector<std::vector<double> > Klocal;
         Eigen::MatrixXd Klocal;
+    std::vector<std::vector<int> > EC;
         std::vector<std::vector<int> > EC_2;//Elemental connectivity - EC[i][j] gives the global node number for local node j in element i - Size - (No. of elements, No. of nodes per element)
 
         std::vector<double> boundary_values; // Vector having the dirichlet boundary value wherever its defined and 0 in all other entries - Size (No. of nodes)

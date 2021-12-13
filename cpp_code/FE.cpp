@@ -114,9 +114,11 @@ void FE::mesh(unsigned int no_quad_points){
     nel = nelx_ * nely_;//    Remove beow part after testing - Only for the purpose of testing
     
     EC_2.resize(nel);
+    EC.resize(nel);
     // Since EC is a vector of a vector , we need to initialize each row of EC
     for(unsigned int i = 0; i < nel; i++){
         // Over here we have to use dofs_per_ele as these will be the number of columns in EC
+        EC[i] = std::vector<int>(dofs_per_ele);
         EC_2[i] = std::vector<int>(no_of_nodes_per_element);
     }
     
@@ -142,6 +144,33 @@ void FE::mesh(unsigned int no_quad_points){
         inc_x_ += 1;
     }
     
+    int nnx = nelx_ + 1; // Number of nodes along x
+    int nny = nely_ + 1; // Number of nodes along y
+    unsigned int dofs_x = nnx * 2; // Number of dofs along x
+    unsigned int dofs_y = nny * 2; // Number of dofs along y
+    int inc_x = 0; // Tells how many increments we have had in x
+    int inc_y = 0; // Tells how many increments we have had in y
+    unsigned int n_count = 0;
+    // Construct EC - EC[i][j] gives the global node number for local node j in element i
+    for(unsigned int i = 0; i < nel;i++){
+   //            If we have reached last node on x, we increment y and reset our x coutner
+           if(inc_x == dofs_x - 2){
+               inc_y+=2;
+               inc_x = 0;
+           }
+       //      Storing clockwise on each element - pattern was hand derived using some examples for lesser number of elements
+       //        Node numbers increase left to right. Inc_y takes us to the nodes of the element 1 level down
+               EC[i][0] = n_count + inc_y;
+               EC[i][1] = EC[i][0] + 1;
+               EC[i][2] = EC[i][1] + 1;
+               EC[i][3] = EC[i][2] + 1;
+               EC[i][4] = dofs_x + n_count + inc_y + 2; //Clock wise direction
+               EC[i][5] = EC[i][4] + 1;
+               EC[i][6] = dofs_x + n_count + inc_y;
+               EC[i][7] = EC[i][6] + 1;
+               inc_x += 2;
+               n_count +=2;
+    }
     // Set up quadrature data - Cant change number of quad points for now - Can include functionality with simple if-else if needed
     quad_rule = no_quad_points;
     quad_points.resize(quad_rule); //Resize quadpoints to appropriate size
