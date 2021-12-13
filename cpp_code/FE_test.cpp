@@ -11,9 +11,9 @@
 
 int main(){
     struct timespec start, end;
-	unsigned int no_quad_points = 3; // For quad, this means 9
-    unsigned int nelx = 20; // Number of elements along x
-    unsigned int nely = 10; // Number of elements along y
+	unsigned short int no_quad_points = 3; // For quad, this means 9
+    unsigned short int nelx = 20; // Number of elements along x
+    unsigned short int nely = 10; // Number of elements along y
     double length = 1.; // Length
     double breadth = 1.; // Breadth
     double penal = 2.;
@@ -25,7 +25,7 @@ int main(){
     Eigen::MatrixXd x; // This is the Vol frac matrix
     // Since nely is the number of rows and nelx is the number of columns
     x.resize(nely,nelx);
-    x.setConstant(nely,nelx,1);
+    x.setConstant(nely,nelx,0.5);
     FE tr(nelx,nely,length,breadth,youngs_mod,pois_rat);
     tr.mesh(no_quad_points);
     tr.init_data_structs();

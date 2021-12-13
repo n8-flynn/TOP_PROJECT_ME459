@@ -255,7 +255,7 @@ inline void FE::cal_jac(uint8_t q1, uint8_t q2){
             // Looping through the nodes of an element
             for(unsigned short int A = 0; A < no_of_nodes_per_element; A++){
                 // Over here dim*A is used because EC has dim dofs per node. Each of these dofs have the same coordinate, so we can pick either one while calculating the jacobian. Over here, we use all the even dofs
-                Jac(i,j) += NC[dim*EC_2[0][A]][i] * basis_gradient(A, quad_points[q1][0], quad_points[q2][1])[j];
+                Jac(i,j) += NC[EC[0][dim*A]][i] * basis_gradient(A, quad_points[q1][0], quad_points[q2][1])[j];
             }
         }
     }
@@ -324,16 +324,13 @@ void FE::assemble(Eigen::MatrixXd x,double penal){
         x_ = x(ely,elx);
         elx++;
         // Now we assemble the Klocal into the K matrix which is the global matrix
-        for(unsigned short int I = 0; I < no_of_nodes_per_element ; I++){
-            row1 = dim*EC_2[ele][I];
-            row2 = dim*I;
-            for(unsigned short int J = 0; J < no_of_nodes_per_element ; J++){
-                col1 = dim*EC_2[ele][J];
-                col2 = dim*J;
-                K.coeffRef(row1,col1) += pow(x_,penal) * Klocal(row2,col2);
-                K.coeffRef(row1,col1+1) += pow(x_,penal) * Klocal(row2,col2+1);
-                K.coeffRef(row1+1,col1) += pow(x_,penal) * Klocal(row2+1,col2);
-                K.coeffRef(row1+1,col1+1) += pow(x_,penal) * Klocal(row2+1,col2+1);
+        for(unsigned short int I = 0; I < dofs_per_ele ; I++){
+            row1 = EC[ele][I];
+            row2 = I;
+            for(unsigned short int J = 0; J < dofs_per_ele ; J++){
+                col1 = EC[ele][J];
+                col2 = J;
+                K.coeffRef(row1, col1) += pow(x_,penal) * Klocal(row2,col2);
                 
             }
         }
