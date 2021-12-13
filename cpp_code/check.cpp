@@ -14,14 +14,14 @@ MatrixXd check(int nelx, int nely, double rmin, MatrixXd x, MatrixXd dc) {
 	int k;
 	int l;
 	double fac = 0;
-	int val; //Used for testing only. 
+	int val;
 	double *sum = new double;
+
 	MatrixXd dcn(nely, nelx); //Dcn is a matrix that is nelx by nely.
 
-	
 	dcn.setConstant(0.0); //Initializes the Dcn matrix to all zeros. 
-	//cout << dc << endl;
-	for (i = 0; i < nelx; i++) { // i increases when it less than nelx
+
+	for (i = 0; i < nelx; i++) {
 		for (j = 0; j < nely; j++) {
 			*sum = 0.0; 
 			for (k = max(i + 1 - rmin_f, 1);k <= min(i + 1 + rmin_f, nelx); k++) {
@@ -33,12 +33,7 @@ MatrixXd check(int nelx, int nely, double rmin, MatrixXd x, MatrixXd dc) {
 				}
 			}
 			dcn(j, i) = dcn(j, i) / (x(j, i) * (*sum));
-			//cout << ree << endl;
-			//cout << dcn << endl;
-			//cout << j << endl;
-			//cout << i << endl;
 		}
 	} 
-	//cout << dcn << endl;
 	return dcn;
 }
