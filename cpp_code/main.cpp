@@ -22,7 +22,7 @@ int main(int argc, char* argv[])
 	size_t nelx = 20;
 	size_t nely = 10;
 	double volfrac = 0.5;
-	double penal = 3.0;
+	double penal = 2.0;
 	double rmin = 1.125; 
 	
 	printf("Top starting\n");
