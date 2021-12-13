@@ -59,7 +59,7 @@ MatrixXd top(unsigned int nelx, unsigned int nely, double volfrac, double penal,
 		for (int ely = 0; ely < nely; ely++) {
 			for (int elx = 0; elx < nelx; elx++) {
                			ele_no = ely * nelx + elx;
-                		global_nodes = fe_object.EC_2[ele_no];
+                		global_nodes = fe_object.EC[ele_no];
                 		Ue = U(global_nodes);
 						// Issue in line below (1x4) * (8x8) x (4x1) - needs to be same dimension
 						mat_res = Ue.transpose() * fe_object.Klocal * Ue;
