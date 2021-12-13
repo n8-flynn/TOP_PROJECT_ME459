@@ -9,6 +9,14 @@
 
 using namespace Eigen;
 
-MatrixXd OC(unsigned int nelx, unsigned int nely, double volfrac, MatrixXd& x, MatrixXd& dc);
+MatrixXd OC(unsigned int nelx, unsigned int nely, double volfrac, MatrixXd x, MatrixXd dc);
+
+MatrixXd mmax(MatrixXd m1, MatrixXd m2);
+
+MatrixXd mmin(MatrixXd m1, MatrixXd m2);
+
+MatrixXd msqrt(MatrixXd m1);
+
+MatrixXd mdot(MatrixXd m1, MatrixXd m2);
 
 #endif

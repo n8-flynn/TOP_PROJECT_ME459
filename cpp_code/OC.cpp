@@ -5,40 +5,36 @@
 using namespace Eigen;
 using namespace std;
 
-MatrixXd OC(unsigned int nelx, unsigned int nely, double volfrac,MatrixXd &x,MatrixXd &dc)
+MatrixXd OC(unsigned int nelx, unsigned int nely, double volfrac,MatrixXd x,MatrixXd dc)
 {
 	double l1 = 0;
 	double l2 = 100000;
 	double lmid;
+	double op1 = 0.001;
+	double op2 = 1.0;
 	
 	MatrixXd move(nely, nelx);
-	MatrixXd xnew(nely, nelx);
-	MatrixXd newdc(nely, nelx);
-	MatrixXd m3(nely, nelx);
-	
 	move.setConstant(0.2);
+
+	MatrixXd xnew(nely, nelx);
+
+	MatrixXd newdc(nely, nelx);
 	
+	MatrixXd op1m(nely, nelx);
+	op1m.setConstant(op1);
+
+	MatrixXd op2m(nely, nelx);
+	op2m.setConstant(op2);
+
 	while (l2 - l1 > 0.0001)
 	{
-		lmid = 0.5 * (l2 + l1); //eq 1
+		lmid = 0.5 * (l2 + l1);
+		//cout << x << endl;
+		//printf(" \n");
+	
+		xnew = mmax(op1m, mmax(x-move, mmin(op2m, mmin(x+move, mdot(x,msqrt(-dc/lmid))))));
+		//cout << xnew << endl;
 
-		MatrixXd m1 = x - move; 
-		//cout << m1 << endl; //eq 2
-		MatrixXd m2 = x + move;
-		//cout << m2 << endl; //eq 3
-		//cout << dc << endl; //eq 3
-		newdc = -dc/lmid;
-		//cout << newdc << endl;
-		//newdc.sqrt(); //Need to write 
-		m3 = x.cwiseProduct(newdc);
-		//cout << m3 << endl;//eq 4
-		
-		double mmax = m1.maxCoeff(&nely, &nelx); //eq 5
-		double mmin = m2.minCoeff(&nely, &nelx); //eq 6
-		double sqrtMin = m3.minCoeff(&nely, &nelx); //eq 7
-
-        xnew.setConstant(max(0.001, max(mmax, min(1.0, min( mmin, sqrtMin)))));
-		//cout << xnew << endl; //eq 8
 		if (xnew.sum() - volfrac * nelx * nely > 0)
 		{
 			l1 = lmid;
@@ -50,5 +46,63 @@ MatrixXd OC(unsigned int nelx, unsigned int nely, double volfrac,MatrixXd &x,Mat
 	return xnew;
 }
 
+MatrixXd mmax(MatrixXd m1, MatrixXd m2) {
+	int r = m1.rows();
+	int c = m1.cols();
+	
+	for (int i = 0; i < r; i++) {
+		for (int j = 0; j < c; j++) {
+			if (m1(i, j) > m2(i, j)) {
+				m1(i, j) = m1(i, j);
+			}
+			else {
+				m1(i, j) = m2(i, j);
+			}
+		}
+	}
+	return m1;
+}
+
+MatrixXd mmin(MatrixXd m1, MatrixXd m2) {
+	int r = m1.rows();
+	int c = m1.cols();
+
+	for (int i = 0; i < r; i++) {
+		for (int j = 0; j < c; j++) {
+			if (m1(i, j) < m2(i, j)) {
+				m1(i, j) = m1(i, j);
+			}
+			else {
+				m1(i, j) = m2(i, j);
+			}
+		}
+	}
+	
+	return m1; 
+}
+
+MatrixXd msqrt(MatrixXd m1) {
+	int r = m1.rows();
+	int c = m1.cols();
+
+	for (int i = 0; i < r; i++) {
+		for (int j = 0; j < c; j++) {
+			m1(i, j) = pow(m1(i, j), 0.5);
+		}
+	}
+	return m1;
+}
+
+MatrixXd mdot(MatrixXd m1, MatrixXd m2) {
+	int r = m1.rows();
+	int c = m1.cols();
+
+	for (int i = 0; i < r; i++) {
+		for (int j = 0; j < c; j++) {
+			m1(i, j) = m1(i, j) * m2(i, j);
+		}
+	}
+	return m1;
+}
 
 
