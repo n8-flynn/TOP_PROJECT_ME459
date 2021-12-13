@@ -9,8 +9,7 @@ using namespace std;
 MatrixXd top(unsigned int nelx, unsigned int nely, double volfrac, double penal, double rmin) {
 	int loop = 0; //Used to count the number of iterations in the output. 
 	double c = 0;
-	double change = 0.0; //Set to the maximum change between x and xold (convergence criteria). 
-
+	double change = 1; //Set to the maximum change between x and xold (convergence criteria). 
 	MatrixXd x(nely, nelx);
 	MatrixXd dc(nely, nelx); 
 	x.setConstant(volfrac); //Sets all elements in matrix x to the volume fraction variable. 
@@ -38,7 +37,7 @@ MatrixXd top(unsigned int nelx, unsigned int nely, double volfrac, double penal,
     fe_object.define_boundary_condition(force,g);
     fe_object.cal_k_local();
 	
-	while (loop < 1000) {
+	while (change > 0.1) {
 		
 		loop++;
 		xold = x;
@@ -70,9 +69,9 @@ MatrixXd top(unsigned int nelx, unsigned int nely, double volfrac, double penal,
 
 		x = OC(nelx, nely,volfrac, x, dc); 
 
-		MatrixXd xchange = (x - xold);
+		MatrixXd xchange = mabs(x - xold);
 
-		change = abs(xchange.maxCoeff());
+		change = xchange.maxCoeff();
 
 		printf("\nIteration # %d, change = %f\n\n",loop,change); 
 	}
@@ -80,3 +79,15 @@ MatrixXd top(unsigned int nelx, unsigned int nely, double volfrac, double penal,
 	return x;
 }
 
+MatrixXd mabs(MatrixXd m1) {
+	int r = m1.rows();
+	int c = m1.cols();
+
+	for (int i = 0; i < r; i++) {
+		for (int j = 0; j < c; j++) {
+			m1(i, j) = pow(pow(m1(i, j), 2),0.5);
+		}
+	}
+	return m1;
+
+}
