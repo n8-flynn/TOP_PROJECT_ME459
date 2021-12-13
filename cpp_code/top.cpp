@@ -9,11 +9,13 @@ using namespace std;
 MatrixXd top(unsigned int nelx, unsigned int nely, double volfrac, double penal, double rmin) {
 	int loop = 0; //Used to count the number of iterations in the output. 
 	double c = 0;
-	double change = 1; //Set to the maximum change between x and xold (convergence criteria). 
+	double change = 1.0; //Set to the maximum change between x and xold (convergence criteria). 
 	MatrixXd x(nely, nelx);
 	MatrixXd dc(nely, nelx); 
 	x.setConstant(volfrac); //Sets all elements in matrix x to the volume fraction variable. 
-	MatrixXd xold;
+	MatrixXd xold(nely, nelx);
+	MatrixXd xchange(nely, nelx);
+	xchange.setZero();
 	VectorXd U;
 
 	//! Defining material properties required for the FEM code
@@ -37,9 +39,10 @@ MatrixXd top(unsigned int nelx, unsigned int nely, double volfrac, double penal,
     fe_object.define_boundary_condition(force,g);
     fe_object.cal_k_local();
 	
-	while (change > 0.1) {
+	while (change > 0.001) {
 		
 		loop++;
+		
 		xold = x;
 
 		fe_object.assemble(x,penal);
@@ -66,13 +69,18 @@ MatrixXd top(unsigned int nelx, unsigned int nely, double volfrac, double penal,
 		// Function check below causes Eigen errors (has to be something small in the function)
 		dc = check(nelx, nely, rmin, x, dc);
 
-		x = OC(nelx, nely,volfrac, x, dc); 
+		x = OC(nelx, nely,volfrac, x, dc);
 
-		MatrixXd xchange = mabs(x - xold);
+		//cout << x << endl;
+
+		xchange = mabs(x - xold);
+
+		//printf("\n");
+		//cout << xchange << endl;
 
 		change = xchange.maxCoeff();
 
-		printf("\nIteration # %d, change = %f\n\n",loop,change); 
+		printf("\nIteration # %d, change = %f\n",loop,change); 
 	}
 	cout << x << endl;
 	return x;
@@ -88,5 +96,4 @@ MatrixXd mabs(MatrixXd m1) {
 		}
 	}
 	return m1;
-
 }
