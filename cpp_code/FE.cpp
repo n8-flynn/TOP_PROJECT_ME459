@@ -90,21 +90,22 @@ void FE::mesh(uint8_t no_quad_points){
 	// Make NC - NC remains the same for both the quad and the triangular elements
 
 	double incr_x = L/(nelx_); // since the nodes are equally spaced, the x coordinate will differ by this increment
-    double incr_y = -L/(nely_); // similarly, the y coordinate will differ by this incremenet
+    double incr_y = -B/(nely_); // similarly, the y coordinate will differ by this incremenet
     double x = 0.0; // first node is 0,0
-    double y = 0.0;
+    double y = B;
     // Construct NC - NC[i][0] gives the x - coordinate of the ith global node, NC[i][1] gives the y
     // Here, 2 dofs make up one node and hence pairs of dofs will have the same coordinates
     for(unsigned short int i = 0; i < total_dofs - 1 ; i = i + dim){
         NC[i][0] = x;
         NC[i+1][0]  = x; 
-        x += incr_x;
+        
         NC[i][1] = y;
         NC[i+1][1] = y;
+        y += incr_y;
         // If we have reached the x limit, reset x  to 0 and increment y
-        if(abs(NC[i][0] - L) < 0.0000001){
-            x = 0;
-            y += incr_y;
+        if(abs(NC[i][1]) < 0.0000001){
+            x += incr_x;
+            y = B;
         }
 
     }
@@ -131,17 +132,17 @@ void FE::mesh(uint8_t no_quad_points){
     // Construct EC - EC[i][j] gives the global node number for local node j in element i
     for(unsigned short int i = 0; i < nel;i++){
 //            If we have reached last node on x, we increment y and reset our x coutner
-        if(inc_x_ == nnx_ - 1){
-            inc_y_+=1;
-            inc_x_ = 0;
+        if(inc_y_ == nny_ - 1){
+            inc_x_+=1;
+            inc_y_ = 0;
         }
 //            Storing clockwise on each element - pattern was hand derived using some examples for lesser number of elements
 //            Node numbers increase left to right. Inc_y takes us to the nodes of the element 1 level down
-        EC_2[i][0] = i + inc_y_;
-        EC_2[i][1] = i + 1 + inc_y_;
-        EC_2[i][2] = nnx_ + 1 + i + inc_y_;
-        EC_2[i][3] = nnx_ + i + inc_y_;
-        inc_x_ += 1;
+        EC_2[i][0] = i + inc_x_;
+        EC_2[i][1] = i + 1 + inc_x_;
+        EC_2[i][2] = nny_ + 1 + i + inc_x_;
+        EC_2[i][3] = nny_ + i + inc_x_;
+        inc_y_ += 1;
     }
     
     unsigned short int nnx = nelx_ + 1; // Number of nodes along x
@@ -154,21 +155,21 @@ void FE::mesh(uint8_t no_quad_points){
     // Construct EC - EC[i][j] gives the global node number for local node j in element i
     for(unsigned short int i = 0; i < nel;i++){
    //            If we have reached last node on x, we increment y and reset our x coutner
-           if(inc_x == dofs_x - 2){
-               inc_y+=2;
-               inc_x = 0;
+           if(inc_y == dofs_y - 2){
+               inc_x+=2;
+               inc_y = 0;
            }
        //      Storing clockwise on each element - pattern was hand derived using some examples for lesser number of elements
        //        Node numbers increase left to right. Inc_y takes us to the nodes of the element 1 level down
-               EC[i][0] = n_count + inc_y;
+               EC[i][0] = n_count + inc_x;
                EC[i][1] = EC[i][0] + 1;
                EC[i][2] = EC[i][1] + 1;
                EC[i][3] = EC[i][2] + 1;
-               EC[i][4] = dofs_x + n_count + inc_y + 2; //Clock wise direction
+               EC[i][4] = dofs_y + n_count + inc_x + 2; //Clock wise direction
                EC[i][5] = EC[i][4] + 1;
-               EC[i][6] = dofs_x + n_count + inc_y;
+               EC[i][6] = dofs_y + n_count + inc_x;
                EC[i][7] = EC[i][6] + 1;
-               inc_x += 2;
+               inc_y += 2;
                n_count +=2;
     }
     // Set up quadrature data - Cant change number of quad points for now - Can include functionality with simple if-else if needed
@@ -179,16 +180,29 @@ void FE::mesh(uint8_t no_quad_points){
     }
     quad_weights.resize(quad_rule); //Resize quadweights to appropriate size
 
-    quad_points[0][0] = -sqrt(3./5.); // xi
-    quad_points[0][1] = -sqrt(3./5.); // eta
+    quad_points[0][0] = sqrt(3./5.); // xi
+    quad_points[0][1] = sqrt(3./5.); // eta
     quad_points[1][0] = 0;
     quad_points[1][1] = 0;
-    quad_points[2][0] = sqrt(3./5.);
-    quad_points[2][1] = sqrt(3./5.);
+    quad_points[2][0] = -sqrt(3./5.);
+    quad_points[2][1] = -sqrt(3./5.);
 
     quad_weights[0] = 5./9.;
     quad_weights[1] = 8./9.;
     quad_weights[2] = 5./9.;
+//    quad_points[0][0] = -sqrt((3./7.) - (2./7.)*sqrt(6./5.)); // xi
+//    quad_points[0][1] = -sqrt((3./7.) - (2./7.)*sqrt(6./5.)); // eta
+//    quad_points[1][0] = +sqrt((3./7.) - (2./7.)*sqrt(6./5.));
+//    quad_points[1][1] = +sqrt((3./7.) - (2./7.)*sqrt(6./5.));
+//    quad_points[2][0] = -sqrt((3./7.) + (2./7.)*sqrt(6./5.));
+//    quad_points[2][1] = -sqrt((3./7.) + (2./7.)*sqrt(6./5.));
+//    quad_points[3][0] = +sqrt((3./7.) + (2./7.)*sqrt(6./5.));
+//    quad_points[3][1] = +sqrt((3./7.) + (2./7.)*sqrt(6./5.));
+//
+//    quad_weights[0] = (18 + sqrt(30))/36;
+//    quad_weights[1] =  (18 + sqrt(30))/36;
+//    quad_weights[2] = (18 - sqrt(30))/36;
+//    quad_weights[3] =  (18 - sqrt(30))/36;
 
 }
 
@@ -208,7 +222,7 @@ void FE::define_boundary_condition(double force, double g){
     }
     // We define the F matrix fully here itself as we have no body force and just a force on the bottom right node acting downwards - Note, the way NC is set up, downwards is +ve Y axis and east is +ve x axis
     for(unsigned short int dof_no = 0; dof_no < total_dofs ; dof_no++){
-        if((abs(NC[dof_no][0] - L) < 0.00001) && (abs(NC[dof_no][1] + B) < 0.00001)){
+        if((abs(NC[dof_no][0] - L) < 0.00001) && (abs(NC[dof_no][1]) < 0.00001)){
             F[dof_no] = 0; // There are 2 dofs that satisfy this constraint - the first one is the x dof so this will be 0
             F[dof_no + 1] = -f1; // The second dof is the y dof and this sbould have a force
             break; // After we have found this dof, we break otherwise we will be setting a force for someother dof
@@ -217,7 +231,7 @@ void FE::define_boundary_condition(double force, double g){
 //    std::cout<<F<<std::endl;
 }
 
-void saveData(std::string fileName, Eigen::MatrixXd  matrix)
+void FE::saveData(std::string fileName, Eigen::MatrixXd  matrix)
 {
     //https://eigen.tuxfamily.org/dox/structEigen_1_1IOFormat.html
     const static Eigen::IOFormat CSVFormat(Eigen::FullPrecision, Eigen::DontAlignCols, ", ", "\n");
@@ -262,7 +276,7 @@ inline void FE::cal_jac(uint8_t q1, uint8_t q2){
     }
     detJ = Jac.determinant();
     invJ = Jac.inverse();
-//    saveData("invJ.csv", invJ);
+    saveData("invJ.csv", invJ);
 }
 
 void FE::cal_k_local(){
@@ -303,12 +317,20 @@ void FE::cal_k_local(){
             }
         }
     }
-//    saveData("k_local.csv", Klocal);
+    saveData("k_local.csv", Klocal);
 }
 
 
 void FE::assemble(Eigen::MatrixXd x,double penal){
     std::cout<<"Assembling and applying dirichlet conditions"<<std::endl;
+//    Klocal<<0.4945,0.1786,-0.3022,-0.0137,-0.2473,-0.1786,0.0549,0.0137,
+//            0.1786,0.4945,0.0137,0.0549,-0.1786,-0.2473,-0.0137,-0.3022,
+//            -0.3022,0.0137,0.4945,-0.1786,0.0549,-0.0137,-0.2473,0.1786,
+//            -0.0137,0.0549,-0.1786,0.4945,0.0137,-0.3022,0.1786,-0.2473,
+//            -0.2473,-0.1786,0.0549,0.0137,0.4945,0.1786,-0.3022,-0.0137,
+//            -0.1786,-0.2473,-0.0137,-0.3022,0.1786,0.4945,0.0137,0.0549,
+//            0.0549,-0.0137,-0.2473,0.1786,-0.3022,0.0137,0.4945,-0.1786,
+//            0.0137,-0.3022,0.1786,-0.2473,-0.0137,0.0549,-0.1786,0.4945;
     unsigned short int ely = 0;
     unsigned short int elx = 0;
     double x_;
@@ -318,12 +340,12 @@ void FE::assemble(Eigen::MatrixXd x,double penal){
     unsigned short int row2;
     unsigned short int col2;
     for(unsigned short int ele = 0; ele < nel ; ele++){
-        if(elx == nelx_){
-            elx = 0;
-            ely++;
+        if(ely == nely_){
+            ely = 0;
+            elx++;
         }
         x_ = x(ely,elx);
-        elx++;
+        ely++;
         // Now we assemble the Klocal into the K matrix which is the global matrix
         for(unsigned short int I = 0; I < dofs_per_ele ; I++){
             row1 = EC[ele][I];
@@ -369,7 +391,7 @@ Eigen::VectorXd FE::solve(){
     Eigen::SimplicialLDLT<Eigen::SparseMatrix<double> > solver;
     solver.compute(K);
     U = solver.solve(F);
-   // std::cout<<U<<std::endl;
+//    std::cout<<U<<std::endl;
     return U;
 }
 

@@ -20,6 +20,8 @@
 
 
 typedef Eigen::Matrix<double, Eigen::Dynamic, Eigen::Dynamic> MatrixXd;
+
+
 class FE{
     public:
         FE(unsigned short int nelx,unsigned short int nely,double length, double breadth,double youngs_mod, double pois_rat); // The constructor takes the required arguments
@@ -35,6 +37,7 @@ class FE{
         void assemble(Eigen::MatrixXd x,double penal); //Uses the klocal to assemble K global using the volume fractions
         Eigen::VectorXd solve(); // Solves and returns U which is then used in the toplogy code
         void fem_to_vtk();
+        void saveData(std::string fileName, Eigen::MatrixXd  matrix);
 
 
         // Class datastructures
