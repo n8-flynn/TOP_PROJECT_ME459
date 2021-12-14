@@ -37,8 +37,8 @@ MatrixXd mfilter(MatrixXd &m1, double filter) {
 
 int main(int argc, char* argv[]) 
 {
-	size_t nelx = 100;
-	size_t nely = 50;
+	size_t nelx = 32;
+	size_t nely = 20;
 	double volfrac = 0.4;
 	double penal = 3;
 	double rmin = 1.2;
