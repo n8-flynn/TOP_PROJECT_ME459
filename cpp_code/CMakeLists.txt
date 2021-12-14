@@ -6,4 +6,3 @@ project(top)
 
 #Adding files
 add_executable(trial main.cpp top.cpp OC.cpp FE.cpp check.cpp top.h OC.h FE.h check.h)
- 
