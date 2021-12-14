@@ -17,20 +17,41 @@ void writeToCsv(string fileName, MatrixXd  matrix)
 	}
 }
 
+MatrixXd mfilter(MatrixXd &m1, double filter) {
+	int r = m1.rows();
+	int c = m1.cols();
+
+
+	for (int i = 0; i < r; i++) {
+		for (int j = 0; j < c; j++) {
+			if (m1(i, j) > filter) {
+				m1(i, j) = 1;
+			}
+			if (m1(i, j) < filter) {
+				m1(i, j) = 0;
+			}
+		}
+	}
+	return m1;
+}
+
 int main(int argc, char* argv[]) 
 {
-	size_t nelx = 20;
-	size_t nely = 10;
-	double volfrac = 0.5;
-	double penal = 1.5;
-	double rmin = 1.125;
+	size_t nelx = 100;
+	size_t nely = 50;
+	double volfrac = 0.4;
+	double penal = 3;
+	double rmin = 1.2;
 	
 	printf("Top starting\n");
 	
 	MatrixXd output = top(nelx, nely, volfrac, penal, rmin);
-	
-	printf("Top done\n");
+
+	//mfilter(output, 0.5);
+
+	cout << output << endl;
 	
 	writeToCsv("density_field.csv", output);
+	
 	return 0;
 }
