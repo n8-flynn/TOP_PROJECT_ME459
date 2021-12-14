@@ -9,7 +9,7 @@
 
 using namespace Eigen;
 
-MatrixXd OC(unsigned int nelx, unsigned int nely, double volfrac, MatrixXd x, MatrixXd dc);
+MatrixXd OC(unsigned int nelx, unsigned int nely, double volfrac, MatrixXd x, MatrixXd dc, double move_val);
 
 MatrixXd mmax(MatrixXd m1, MatrixXd m2);
 
