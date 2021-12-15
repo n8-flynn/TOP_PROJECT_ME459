@@ -8,12 +8,12 @@ using namespace std;
 
 
 MatrixXd top(unsigned int nelx, unsigned int nely, double volfrac, double penal, double rmin) {
-	
+	printf("Top starting\n");
+
 	int loop = 0.0; //Used to count the number of iterations in the output. 
 	double c = 0.0;
 	double change = 1.0; //Set to the maximum change between x and xold (convergence criteria). 
-	double old_change = 0.0;
-	double move_val = 0.2;
+	double move = 0.2;
 
 	MatrixXd x(nely, nelx);
 	MatrixXd dc(nely, nelx); 
@@ -28,11 +28,11 @@ MatrixXd top(unsigned int nelx, unsigned int nely, double volfrac, double penal,
 	//! rule as this is sufficient to compute the eintegration exactly
 	
 	uint8_t no_quad_points = 3; //! Domain dimensions
-	double length = 20; //! Length
-	double breadth = 10; //! Breadth
+	double length = nely; //! Length
+	double breadth = nelx; //! Breadth
    	double youngs_mod = 1; //! Youngs Modulus of the material
     double pois_rat = 0.3; //! Poisons ratio
-    double force = 1.; //! Force acting on the cantilivered beam
+    double force = 20.; //! Force acting on the cantilivered beam
     double g = 0.; //! The dirichlet boundary condition - For this problem we fix the left edge of the 2D domain
 
     // Define the FE class object
@@ -43,14 +43,13 @@ MatrixXd top(unsigned int nelx, unsigned int nely, double volfrac, double penal,
     fe_object.init_data_structs(); //! Define the boundary conditons - Currently only supports the cantilivered boundary conditions
     fe_object.define_boundary_condition(force,g);
     fe_object.cal_k_local();
+	printf("Solving");
 
-	while (change > 0.00001) {
-		old_change = change;
+	while (change > 0.0001 && x.sum() > 0.9 * volfrac * nely * nelx) {
 		loop++;
 		xold = x;
 		fe_object.assemble(x, penal);
 		U = fe_object.solve();
-		fe_object.fem_to_vtk();
 		unsigned short int ele_no;
 		vector<unsigned short int> global_nodes;
 		VectorXd Ue;
@@ -65,20 +64,18 @@ MatrixXd top(unsigned int nelx, unsigned int nely, double volfrac, double penal,
 				mat_res = Ue.transpose() * fe_object.Klocal * Ue; // FE implementation is all in mat_res
 				c += pow(x(ely, elx), penal) * mat_res; //*(transpose of Ue) * KE * Ue
 				dc(ely, elx) = -penal * pow(x(ely, elx), (penal - 1.)) * mat_res; //*(transpose of Ue) * KE * Ue;
-				}
-			}
-		
-		dc = check(nelx, nely, rmin, x, dc);
-		
-		x = OC(nelx, nely, volfrac, x, dc, move_val); //Optimization criteria function.
-		
-		xchange = (x - xold).cwiseAbs(); //Compares the old volume fraction field with the new field. 
-		change = xchange.maxCoeff(); //Finds the larges change in the xchange matrix as a single value. 
-		
-		if (old_change == change) {
-				move_val = pow(move_val,2) ; //Forces the change to decrease, which leads to the optimization converging before it over optimizes. 
 			}
 		}
+
+		dc = check(nelx, nely, rmin, x, dc);
+
+		x = OC(nelx, nely, volfrac, x, dc, move); //Optimization criteria function.
+
+		xchange = (x - xold).cwiseAbs(); //Compares the old volume fraction field with the new field. 
+		change = xchange.maxCoeff(); //Finds the larges change in the xchange matrix as a single value. 
+		printf(".");
+	}
+	printf("\nDone\n");
 	return x;
 }
 

@@ -13,9 +13,8 @@ MatrixXd check(int nelx, int nely, double rmin, MatrixXd x, MatrixXd dc) {
 	int j;
 	int k;
 	int l;
-	double fac = 0;
-	int val;
-//	double *sum = new double;
+	double val = 0.0;
+	double fac = 0.0;
     double sum;
 
 	MatrixXd dcn(nely, nelx); //Dcn is a matrix that is nelx by nely.

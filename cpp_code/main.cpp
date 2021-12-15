@@ -43,13 +43,11 @@ int main(int argc, char* argv[])
 	double penal = 3;
 	double rmin = 1.2;
 	
-	printf("Top starting\n");
-	
 	MatrixXd output = top(nelx, nely, volfrac, penal, rmin);
 
-	//mfilter(output, 0.5);
+	//mfilter(output, 0.4);
 
-	cout << output << endl;
+	//cout << output << endl;
 	
 	writeToCsv("density_field.csv", output);
 	

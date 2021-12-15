@@ -68,7 +68,7 @@ inline std::vector<double> FE::basis_gradient(unsigned short int node,double xi,
 }
 
 void FE::mesh(uint8_t no_quad_points){
-	std::cout<<"Generating Mesh .."<<std::endl;
+	//std::cout<<"Generating Mesh .."<<std::endl;
 
     // The number of nodes is just an extension of 1D
     
@@ -145,9 +145,9 @@ void FE::mesh(uint8_t no_quad_points){
         inc_y_ += 1;
     }
     
-    unsigned short int nnx = nelx_ + 1; // Number of nodes along x
+    //unsigned short int nnx = nelx_ + 1; // Number of nodes along x
     unsigned short int nny = nely_ + 1; // Number of nodes along y
-    unsigned short int dofs_x = nnx * 2; // Number of dofs along x
+   // unsigned short int dofs_x = nnx * 2; // Number of dofs along x
     unsigned short int dofs_y = nny * 2; // Number of dofs along y
     unsigned short int inc_x = 0; // Tells how many increments we have had in x
     unsigned short int inc_y = 0; // Tells how many increments we have had in y
@@ -322,7 +322,7 @@ void FE::cal_k_local(){
 
 
 void FE::assemble(Eigen::MatrixXd x,double penal){
-    std::cout<<"Assembling and applying dirichlet conditions"<<std::endl;
+    //std::cout<<"Assembling and applying dirichlet conditions"<<std::endl;
 //    Klocal<<0.4945,0.1786,-0.3022,-0.0137,-0.2473,-0.1786,0.0549,0.0137,
 //            0.1786,0.4945,0.0137,0.0549,-0.1786,-0.2473,-0.0137,-0.3022,
 //            -0.3022,0.0137,0.4945,-0.1786,0.0549,-0.0137,-0.2473,0.1786,
@@ -361,7 +361,7 @@ void FE::assemble(Eigen::MatrixXd x,double penal){
 //    std::cout << "The determinant of K is " << K.determinant() << std::endl;
 //    saveData("k_before.csv", K);
     // Now we apply the Dirichlet boundary conditons and modify K accordingly
-    std::cout<<"Applying Dirichlet BC's"<<std::endl;
+   // std::cout<<"Applying Dirichlet BC's"<<std::endl;
     for(unsigned short int i : boundary_nodes){
         double g = boundary_values[i];
         // Loop to move the approprate column of K to the RHS - source - https://www.math.colostate.edu/~bangerth/videos.676.21.65.html
@@ -387,7 +387,7 @@ void FE::assemble(Eigen::MatrixXd x,double penal){
 //    std::cout<<K<<std::endl;
 }
 Eigen::VectorXd FE::solve(){
-    std::cout<<"Solving..."<<std::endl;
+    //std::cout<<"."<<std::endl;
     Eigen::SimplicialLDLT<Eigen::SparseMatrix<double> > solver;
     solver.compute(K);
     U = solver.solve(F);
