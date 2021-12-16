@@ -32,7 +32,7 @@ MatrixXd top(unsigned int nelx, unsigned int nely, double volfrac, double penal,
 	double breadth = nelx; //! Breadth
    	double youngs_mod = 1; //! Youngs Modulus of the material
     double pois_rat = 0.3; //! Poisons ratio
-    double force = 20.; //! Force acting on the cantilivered beam
+    double force = -1.; //! Force acting on the cantilivered beam
     double g = 0.; //! The dirichlet boundary condition - For this problem we fix the left edge of the 2D domain
 
     // Define the FE class object
@@ -45,7 +45,7 @@ MatrixXd top(unsigned int nelx, unsigned int nely, double volfrac, double penal,
     fe_object.cal_k_local();
 	printf("Solving");
 
-	while (change > 0.0001 && x.sum() > 0.9 * volfrac * nely * nelx) {
+	while (change > 0.0001 && x.sum() > 0.95 * volfrac * nely * nelx) {
 		loop++;
 		xold = x;
 		fe_object.assemble(x, penal);

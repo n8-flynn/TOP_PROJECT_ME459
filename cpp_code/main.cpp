@@ -1,4 +1,5 @@
 #include "top.h"
+#include <sstream>
 
 using namespace Eigen;
 
@@ -37,11 +38,22 @@ MatrixXd mfilter(MatrixXd &m1, double filter) {
 
 int main(int argc, char* argv[]) 
 {
-	size_t nelx = 32;
-	size_t nely = 20;
-	double volfrac = 0.4;
-	double penal = 3;
-	double rmin = 1.2;
+    if(argc < 5){
+        cout<<"Please provide sufficient inputs to run the topology code"<<endl;
+    }
+    istringstream x(argv[1]);
+    size_t nelx;
+    x >> nelx;
+    
+    istringstream y(argv[2]);
+    size_t nely;
+    y >> nely;
+    double volfrac = stod(argv[3]);
+    double penal = stod(argv[4]);
+    double rmin = stod(argv[5]);
+
+    
+    cout<<"You have provided nelx = "<<nelx<<", nely = "<<nely<<", volfrac = "<<volfrac<<", penal = "<<penal<<" and rmin = "<<rmin<<endl;
 	
 	MatrixXd output = top(nelx, nely, volfrac, penal, rmin);
 

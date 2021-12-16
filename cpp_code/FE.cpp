@@ -223,6 +223,7 @@ void FE::define_boundary_condition(double force, double g){
     // We define the F matrix fully here itself as we have no body force and just a force on the bottom right node acting downwards - Note, the way NC is set up, downwards is +ve Y axis and east is +ve x axis
     for(unsigned short int dof_no = 0; dof_no < total_dofs ; dof_no++){
         if((abs(NC[dof_no][0] - L) < 0.00001) && (abs(NC[dof_no][1]) < 0.00001)){
+//        if((abs(NC[dof_no][0] - L) < 0.00001) && (abs(NC[dof_no][1] - B/2) < 0.00001)){
             F[dof_no] = 0; // There are 2 dofs that satisfy this constraint - the first one is the x dof so this will be 0
             F[dof_no + 1] = -f1; // The second dof is the y dof and this sbould have a force
             break; // After we have found this dof, we break otherwise we will be setting a force for someother dof
@@ -276,7 +277,7 @@ inline void FE::cal_jac(uint8_t q1, uint8_t q2){
     }
     detJ = Jac.determinant();
     invJ = Jac.inverse();
-    saveData("invJ.csv", invJ);
+//    saveData("invJ.csv", invJ);
 }
 
 void FE::cal_k_local(){
@@ -317,7 +318,7 @@ void FE::cal_k_local(){
             }
         }
     }
-    saveData("k_local.csv", Klocal);
+//    saveData("k_local.csv", Klocal);
 }
 
 
