@@ -1,5 +1,7 @@
 // Created by Huzaifa Mustafa Unjhawala
 
+/** \file The FE Class header file
+ */
 #ifndef FE_H
 #define FE_H
 
@@ -21,14 +23,21 @@
 
 typedef Eigen::Matrix<double, Eigen::Dynamic, Eigen::Dynamic> MatrixXd;
 
+/*! \brief The FE class computes the Stiffness Matrix and sovles for the displacement.
+ *
+ * The FE class takes as input the domain dimensions, mesh properties and the material properties.
+ * It then computes the Global Stiffness Matrix (K), Global Force Vector (F) and computes the
+ * Global Displacement (U) by solving the linear system KU = F.  Linear Lagrange Basis functions
+ * are used to approximate U over the elements. A nine point Guass Quadrature is used to numerically
+ * integrate the resulting equations. For more details, pleaase view documentation for class members and methods.
+ */
 
 class FE{
     public:
-        FE(unsigned short int nelx,unsigned short int nely,double length, double breadth,double youngs_mod, double pois_rat); // The constructor takes the required arguments
-        double basis_function(unsigned short int node, double xi,double eta); //Calculates the basis function corresponding to the node "node" and at the point 'xi' and 'eta' in the parametric space
-        std::vector<double> basis_gradient(unsigned short int node, double xi,double eta); //Calculates the gradient of the basis function - similar to above
-        void mesh(uint8_t no_quad_points); // Function to mesh the domain - Fills the Nodal connectivity and the Elemental Conncectivity matrices - Can even handle different number of elements along each axis
-        // As of now, user will only have ability to define where the boundary conditions act from outside the code but can change the values of boundary conditions from outside the code
+        FE(unsigned short int nelx,unsigned short int nely,double length, double breadth,double youngs_mod, double pois_rat); /**< The constructor takes the number of elements along the x axis (nelx), the number of elements along the Y axis (nely), the length and breadth (although these are set to always equal nelx and nely), the Youngs Modulus of the material (youngs_mod) and the Poisson Ratio (pois_rat).All of these parameters are then assigned to their respective class members.*/
+        double basis_function(unsigned short int node, double xi,double eta); /**<Calculates the value basis function corresponding to the node "node" and at the point 'xi' and 'eta' in the parametric space.'xi' and 'eta' are the coordinates of the parametric space. This method is used while finding the Elemental stiffness matrix (klocal).*/
+        std::vector<double> basis_gradient(unsigned short int node, double xi,double eta); /**<Calculates the gradient of the basis function corresponding to the node "node" and at the point 'xi' and 'eta' with respect to both 'xi' and 'eta'. Thus, this method returns a vector of length 2 whose 0th element is the gradient with respect to 'xi' and the 1st element is the gradient with respect to 'eta'.*/
+        void mesh(uint8_t no_quad_points); /**< This method fills up the Nodal Coordinate matrix and the Elemental Connectivity matrix whihc define the mesh of the domain. It also takes as input the number of quadrature points in order to define the location of the quadrature points and the quadrature weights. Currently this method can only take 3 quadrature points, however, this can easily be explanded in the future.*/
         void define_boundary_condition(double force, double g,int wh); // Function to fill the boundary_values (stores the values at the boundaries) and the boundary_nodes (stores the global node number of the nodes on the boundary)
         double C(uint8_t i, uint8_t j, uint8_t k, uint8_t l); // Used to get the elasticity tensor C
         void init_data_structs(); //To resize all the global matrices based on the mesh - Internal function

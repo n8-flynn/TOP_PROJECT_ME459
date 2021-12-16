@@ -4,7 +4,15 @@
 #include <fstream>
 #include <iostream>
 
-// Constructor
+/** \brief The FE class constructor
+ * The constructor takes in the required mesh, geometric and material properties and assigns it to the suitable class members.
+ * \param nelx Defines the number of elements along the X-direction.
+ * \param nely Defines the number of elements along the Y-direction.
+ * \param length Defines the length (distance along x). However, in the current version of the code the length always equals nelx.
+ * \param breadth Defines the breadth (distance along y). However, in the current version of the code the length always equals nely.
+ * \param youngs_mod Defines the Youngs Modulus (E) of the material.
+ * \param pois_rat Defines the Poisson Ratio \f$(\nu)\f$ of the material.
+ */
 
 FE::FE(unsigned short int nelx, unsigned short int nely, double length, double breadth, double youngs_mod, double pois_rat){
 	L = length;
