@@ -10,7 +10,7 @@
 
 using namespace Eigen;
 
-MatrixXd top(unsigned int nelx, unsigned int nely, double volfrac, double penal, double rmin);
+MatrixXd top(unsigned int nelx, unsigned int nely, double volfrac, double penal, double rmin,int wh);
 
 MatrixXd mabs(MatrixXd m1);
 

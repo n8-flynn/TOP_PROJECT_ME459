@@ -17,7 +17,6 @@ def main():
 
 
 	fig= plt.plot(figsize = (10,8))
-	print(f"{sys.argv[1]}, {sys.argv[2]}")
 	x = float(sys.argv[1])
 	y = float(sys.argv[2])
 	plt.imshow(data, cmap='gray',extent=[0,x,0,y], aspect=1)

@@ -29,7 +29,7 @@ class FE{
         std::vector<double> basis_gradient(unsigned short int node, double xi,double eta); //Calculates the gradient of the basis function - similar to above
         void mesh(uint8_t no_quad_points); // Function to mesh the domain - Fills the Nodal connectivity and the Elemental Conncectivity matrices - Can even handle different number of elements along each axis
         // As of now, user will only have ability to define where the boundary conditions act from outside the code but can change the values of boundary conditions from outside the code
-        void define_boundary_condition(double force, double g); // Function to fill the boundary_values (stores the values at the boundaries) and the boundary_nodes (stores the global node number of the nodes on the boundary)
+        void define_boundary_condition(double force, double g,int wh); // Function to fill the boundary_values (stores the values at the boundaries) and the boundary_nodes (stores the global node number of the nodes on the boundary)
         double C(uint8_t i, uint8_t j, uint8_t k, uint8_t l); // Used to get the elasticity tensor C
         void init_data_structs(); //To resize all the global matrices based on the mesh - Internal function
         void cal_jac(uint8_t q1, uint8_t q2);

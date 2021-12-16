@@ -38,8 +38,9 @@ MatrixXd mfilter(MatrixXd &m1, double filter) {
 
 int main(int argc, char* argv[]) 
 {
-    if(argc < 5){
+    if(argc < 6){
         cout<<"Please provide sufficient inputs to run the topology code"<<endl;
+        return 0;
     }
     istringstream x(argv[1]);
     size_t nelx;
@@ -51,11 +52,18 @@ int main(int argc, char* argv[])
     double volfrac = stod(argv[3]);
     double penal = stod(argv[4]);
     double rmin = stod(argv[5]);
-
     
-    cout<<"You have provided nelx = "<<nelx<<", nely = "<<nely<<", volfrac = "<<volfrac<<", penal = "<<penal<<" and rmin = "<<rmin<<endl;
+//    istringstream wh_(argv[6]);
+    int wh = atoi(argv[6]);
+//    wh_ >> wh;
+
+    if(wh > 2){
+        cout<<"Please enter boundary condition number from 0 to 2. Anything else is invalid";
+        return 0;
+    }
+    cout<<"You have provided nelx = "<<nelx<<", nely = "<<nely<<", volfrac = "<<volfrac<<", penal = "<<penal<<", rmin = "<<rmin<<" and you have choosen the boundary condition of type "<<wh<<endl;
 	
-	MatrixXd output = top(nelx, nely, volfrac, penal, rmin);
+	MatrixXd output = top(nelx, nely, volfrac, penal, rmin,wh);
 
 	//mfilter(output, 0.4);
 

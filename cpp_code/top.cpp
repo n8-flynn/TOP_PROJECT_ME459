@@ -7,7 +7,7 @@ using namespace Eigen;
 using namespace std;
 
 
-MatrixXd top(unsigned int nelx, unsigned int nely, double volfrac, double penal, double rmin) {
+MatrixXd top(unsigned int nelx, unsigned int nely, double volfrac, double penal, double rmin,int wh) {
 	printf("Top starting\n");
 
 	int loop = 0.0; //Used to count the number of iterations in the output. 
@@ -41,7 +41,7 @@ MatrixXd top(unsigned int nelx, unsigned int nely, double volfrac, double penal,
     // values of the quad rule in this function
     fe_object.mesh(no_quad_points); //! Initiliaze all the major datastructures to the right size
     fe_object.init_data_structs(); //! Define the boundary conditons - Currently only supports the cantilivered boundary conditions
-    fe_object.define_boundary_condition(force,g);
+    fe_object.define_boundary_condition(force,g,wh);
     fe_object.cal_k_local();
 	printf("Solving");
 

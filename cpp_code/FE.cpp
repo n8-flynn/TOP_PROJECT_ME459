@@ -190,23 +190,9 @@ void FE::mesh(uint8_t no_quad_points){
     quad_weights[0] = 5./9.;
     quad_weights[1] = 8./9.;
     quad_weights[2] = 5./9.;
-//    quad_points[0][0] = -sqrt((3./7.) - (2./7.)*sqrt(6./5.)); // xi
-//    quad_points[0][1] = -sqrt((3./7.) - (2./7.)*sqrt(6./5.)); // eta
-//    quad_points[1][0] = +sqrt((3./7.) - (2./7.)*sqrt(6./5.));
-//    quad_points[1][1] = +sqrt((3./7.) - (2./7.)*sqrt(6./5.));
-//    quad_points[2][0] = -sqrt((3./7.) + (2./7.)*sqrt(6./5.));
-//    quad_points[2][1] = -sqrt((3./7.) + (2./7.)*sqrt(6./5.));
-//    quad_points[3][0] = +sqrt((3./7.) + (2./7.)*sqrt(6./5.));
-//    quad_points[3][1] = +sqrt((3./7.) + (2./7.)*sqrt(6./5.));
-//
-//    quad_weights[0] = (18 + sqrt(30))/36;
-//    quad_weights[1] =  (18 + sqrt(30))/36;
-//    quad_weights[2] = (18 - sqrt(30))/36;
-//    quad_weights[3] =  (18 - sqrt(30))/36;
-
 }
 
-void FE::define_boundary_condition(double force, double g){
+void FE::define_boundary_condition(double force, double g,int wh){
     std::cout<<std::endl<<"Defining boundary condition"<<std::endl;
 //    Initialize the Dirichlet and Neumann boundary condtions
     g1 = g;
@@ -219,17 +205,30 @@ void FE::define_boundary_condition(double force, double g){
             boundary_values[dof_no] = g1;
             boundary_nodes.push_back(dof_no);
         }
-    }
-    // We define the F matrix fully here itself as we have no body force and just a force on the bottom right node acting downwards - Note, the way NC is set up, downwards is +ve Y axis and east is +ve x axis
-    for(unsigned short int dof_no = 0; dof_no < total_dofs ; dof_no++){
-        if((abs(NC[dof_no][0] - L) < 0.00001) && (abs(NC[dof_no][1]) < 0.00001)){
-//        if((abs(NC[dof_no][0] - L) < 0.00001) && (abs(NC[dof_no][1] - B/2) < 0.00001)){
-            F[dof_no] = 0; // There are 2 dofs that satisfy this constraint - the first one is the x dof so this will be 0
-            F[dof_no + 1] = -f1; // The second dof is the y dof and this sbould have a force
-            break; // After we have found this dof, we break otherwise we will be setting a force for someother dof
+        // We define the F matrix fully here itself as we have no body force and just a force on the bottom right node acting downwards - Note, the way NC is set up, downwards is +ve Y axis and east is +ve x axis
+        if(wh == 0){
+            if((abs(NC[dof_no][0] - L) < 0.00001) && (abs(NC[dof_no][1]) < 0.00001)){
+                F[dof_no] = 0; // There are 2 dofs that satisfy this constraint - the first one is the x dof so this will be 0
+                F[dof_no + 1] = -f1; // The second dof is the y dof and this sbould have a force
+                break; // After we have found this dof, we break otherwise we will be setting a force for someother dof
+            }
+        }
+        else if(wh == 1){
+            if((abs(NC[dof_no][0] - L) < 0.00001) && (abs(NC[dof_no][1] - B/2) < 0.00001)){
+                F[dof_no] = 0; // There are 2 dofs that satisfy this constraint - the first one is the x dof so this will be 0
+                F[dof_no + 1] = -f1; // The second dof is the y dof and this sbould have a force
+                break; // After we have found this dof, we break otherwise we will be setting a force for someother dof
+            }
+        }
+        else{
+            if((abs(NC[dof_no][0] - L) < 0.00001) && (abs(NC[dof_no][1] - B) < 0.00001)){
+                F[dof_no] = 0; // There are 2 dofs that satisfy this constraint - the first one is the x dof so this will be 0
+                F[dof_no + 1] = -f1; // The second dof is the y dof and this sbould have a force
+                break; // After we have found this dof, we break otherwise we will be setting a force for someother dof
+            }
         }
     }
-//    std::cout<<F<<std::endl;
+
 }
 
 void FE::saveData(std::string fileName, Eigen::MatrixXd  matrix)

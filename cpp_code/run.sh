@@ -11,7 +11,8 @@ nely=20
 volfrac=0.4
 penal=3
 rmin=1.2
-./run $nelx $nely $volfrac $penal $rmin
+wh=0
+./run $nelx $nely $volfrac $penal $rmin $wh
 echo "Calculations complete.To export result to PNG, running post prossesing script"
 module load mamba
 bootstrap_conda
