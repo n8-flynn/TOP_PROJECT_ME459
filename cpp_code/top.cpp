@@ -6,17 +6,14 @@
 using namespace Eigen;
 using namespace std;
 
-
 MatrixXd top(unsigned int nelx, unsigned int nely, double volfrac, double penal, double rmin,int wh) {
 	printf("Top starting\n");
-
 	int loop = 0.0; //Used to count the number of iterations in the output. 
-	double c = 0.0;
 	double change = 1.0; //Set to the maximum change between x and xold (convergence criteria). 
-	double move = 0.2;
+	double move = 0.2; //Used to move the matrix up or down to force optimization convergence.
 
-	MatrixXd x(nely, nelx);
-	MatrixXd dc(nely, nelx); 
+	MatrixXd x(nely, nelx); //Oringal volume fraction field 
+	MatrixXd dc(nely, nelx);  //
 	x.setConstant(volfrac); //Sets all elements in matrix x to the volume fraction variable. 
 	MatrixXd xold(nely, nelx);
 	MatrixXd xchange(nely, nelx);
@@ -75,18 +72,6 @@ MatrixXd top(unsigned int nelx, unsigned int nely, double volfrac, double penal,
 		change = xchange.maxCoeff(); //Finds the larges change in the xchange matrix as a single value. 
 		printf(".");
 	}
-	printf("\nDone\n");
+	printf("\n Done\n");
 	return x;
-}
-
-MatrixXd mabs(MatrixXd m1) {
-	int r = m1.rows();
-	int c = m1.cols();
-
-	for (int i = 0; i < r; i++) {
-		for (int j = 0; j < c; j++) {
-			m1(i, j) = pow(pow(m1(i, j), 2),0.5);
-		}
-	}
-	return m1;
 }
