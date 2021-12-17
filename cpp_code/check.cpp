@@ -23,7 +23,7 @@ MatrixXd check(int nelx, int nely, double rmin, MatrixXd x, MatrixXd dc) {
 
 	for (i = 0; i < nelx; i++) {
 		for (j = 0; j < nely; j++) {
-			sum = 0.0;
+			sum =  0.0;
 			for (k = max(i + 1 - rmin_f, 1);k <= min(i + 1 + rmin_f, nelx); k++) {
 				for (l = max(j + 1- rmin_f, 1); l <= min(j + 1 + rmin_f, nely); l++) {
 					val = pow(i + 1 - k, 2) + pow(j + 1 - l, 2);
