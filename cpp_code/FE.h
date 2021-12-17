@@ -50,8 +50,16 @@ class FE{
 
 
         // Class datastructures
-        double L,B,g1,f1,E,nu,lambda,mu,penal_,detJ; //Standard constants - L - Length, B - breadth, g1 - Dirichlet conditon, E - Youngs Modulus, nu - Poissons ration, lambda and mu
-        // are the lame's parameters
+        double L;/**< Length of domain*/
+        double B;/**< Breadth of the domain*/
+        double g1;/**< The Dirichlet displacement*/
+        double f1;/**< The external force to be applied*/
+        double E;/**< The Youngs Modulus of the material*/
+        double nu;/**< The Poissons Ration*/
+        double lambda;/**< The Lame constant \f$(\lambda)\f$*/
+        double mu;/**< The Lame constant \f$(\mu)\f$*/
+        double penal_;/**< The Penaltly applied - This is related to the topology optimization algorithm*/
+        double detJ;/**< The determinant of the Jacobian that is used to move from the parametric cooridnate system to the actual coordinate system*/
         
         unsigned short int nelx_;/**< Number of elements along the x direction*/
         unsigned short int nely_;/**< Number of elements along the y direction*/
@@ -72,13 +80,13 @@ class FE{
         std::vector<std::vector<unsigned short int> > EC_2;/**< This is currently only used to write the VTU file. Will be deprecated during submission*/
         std::vector<double> boundary_values; /**<Vector having the dirichlet boundary value wherever its defined and 0 for all other rows - Size - (No. of total degrees of freedom)*/
         std::vector< unsigned short int > boundary_nodes; /**<Vector having all the degree of freedom numbers where there is a dirichlet boundary condition applied - Size depends on the number of dirichlet dofs*/
-        std::vector<std::vector<double> > quad_points;/**< Matrix containing the quadrature point locations in terms of \f$(\xi)\f$ and \f$(\eta)\f$. Although there are totally 9 quadrature points, we only define three and loop through these 3 in both directions \f$(\xi)\f$ and \f$(\eta)\f$. Thus, the size of this matrix is (Number of quadrature points in each direction  X Dimension). For more details read source code for function cal_k_local()*/
+        std::vector<std::vector<double> > quad_points;/**< Matrix containing the quadrature point locations in terms of \f$(\xi)\f$ and \f$(\eta)\f$. Although there are totally 9 quadrature points, we only define three and loop through these 3 in both directions \f$(\xi)\f$ and \f$(\eta)\f$. Thus, the size of this matrix is (Number of quadrature points in each direction  X Dimension).In summary, quad_points[q1][i] will give the ith component of quad point q1.For more details read source code for function cal_k_local()*/
         std::vector<double> quad_weights;/**<Vector for the weights to be applied at each quadrature point. This is a vector with length = Number of quadrature points in each direction.Again, there should traditionally be 9 weights(total quadrature points), however, we define 3  and loop through them.For more details read source code for function cal_k_local()*/
         Eigen::MatrixXd invJ;/**< In FEM, the basis functions are defined in the parametric space, however, we integrate and find the solution in the real domain. To move from the parametric coordinate system to the real coordinate system, we need the inverse Jacobian.*/
         Eigen::VectorXd U;/**< The solution vector U (displacement).*/
         Eigen::VectorXd F;/**< This is the Forcing Vector that will make up the RHS of the linear equation we finally solve. Since the Dirichlet Conditions are all u = 0 and there is no body force and only a force at a single node, all but one rows of this matrix will be zero.This Vector however is defined as non sparse. This is because, an insertion needs to take place for that one dof where we have a force. Each insertion requires a binary search and it is thus not feaslible to define the F vector a Sparse Vector from the  very beginning. However, before the linear system is solved, this vector will be converted to a Sparse Vector!*/
 //        Eigen::SparseMatrix<double> K;
-        Eigen::MatrixXd K;/**< This is the Global Stiffness Matrix that makes up the LHS of the linear system of equations we finally solve. By construction, this matrix is largely made up of zeros. Initially it is defined as a non sparse matrix as it requires a lot of data entries and each data entry requires a binary search.However, when the equation is solved for better performance, it is defined as a sparse Matrix. */
+        Eigen::MatrixXd K;/**< This is the Global Stiffness Matrix that makes up the LHS of the linear system of equations we finally solve. By construction, this matrix is largely made up of zeros. Initially it is defined as a non sparse matrix as it requires a lot of data entries and each data entry requires a binary search.However, when the linear system of equation is solved  it is defined as a sparse Matrix for better performance. */
 
 };
 
