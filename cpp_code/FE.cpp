@@ -4,8 +4,8 @@
 #include <fstream>
 #include <iostream>
 
-/** \brief The FE class constructor
- * The constructor takes in the required mesh, geometric and material properties and assigns it to the suitable class members.
+/** \brief The FE Class constructor.
+ * 
  * \param nelx Defines the number of elements along the X-direction.
  * \param nely Defines the number of elements along the Y-direction.
  * \param length Defines the length (distance along x). However, in the current version of the code the length always equals nelx.
@@ -24,8 +24,16 @@ FE::FE(unsigned short int nelx, unsigned short int nely, double length, double b
 }
 
 // Basis function - Internal function needed for fe implementation
+/**\brief The function to define the Bi-linear Lagrange Basis Functiions.
+ *Calculates the value of the Bi-linear basis functions corresponding to the node "node"  at the point 'xi' and 'eta' in the parametric space.
+ *The function is made in-line for better performance.
+ * \param node This is the node to which the basis function belongs to.
+ * \param xi The \f$(\xi)\f$ component of the point in the parametric space where we are evaluating the basis function of a given node.
+ * \param eta The \f$(\eta)\f$ component of the point in the parametric space where we are evaluating the basis function of a given node.
+ */
+
 inline double FE::basis_function(unsigned short int node , double xi, double eta){
-//Kind of hard coded for a bilinear shape function for wuad and linear for triangular - Based on node number, a formual will be choosen using switch-case, then based on the quad point , xi and eta will be substituted to return the value
+//Here I use a switch case to identify the node we and then apply the xi and eta value to evaluate the output. The default case will send out an error message. However, the program will not stop. Exception needs to be added.
     double output;
     switch(node) {
         case 0:
@@ -47,8 +55,16 @@ inline double FE::basis_function(unsigned short int node , double xi, double eta
 	return output;
 }
 // Basis function defined using the general formula obtained from
+
+/** \brief The function to calculate the gradient of the Bi-linear Lagrange Basis Function.
+ * Calculates the gradient of the Bi-linear basis function corresponding to the node "node" and at the point 'xi' and 'eta' with respect to both 'xi' and 'eta'.
+ * Thus, this method returns a vector of length 2 whose 0th element is the gradient with respect to 'xi' and the 1st element is the gradient with respect to 'eta'
+ * \param node This is the node to which the basis function whose gradient we are taking belongs to
+ * \param xi The \f$(\xi)\f$ component of the point in the parametric space where we are evaluating the gradient of the basis function of a given node.
+ * \param eta The \f$(\eta)\f$ component of the point in the parametric space where we are evaluating the gradient of the basis function of a given node.
+ */
 inline std::vector<double> FE::basis_gradient(unsigned short int node,double xi, double eta){
-// Hard coding the basis gradient as could not derive/find the general formula in the case of 2D - maybe its just a multiplication.
+// Similar logic to basis_function.he default case will send out an error message. However, the program will not stop. Exception needs to be added.
     
     std::vector<double> bg(dim,0.0);
     switch(node) {
@@ -70,21 +86,26 @@ inline std::vector<double> FE::basis_gradient(unsigned short int node,double xi,
             break;
         default:
             std::cout<<"There is no "<<node<<" node, invalid input"<<std::endl;
+            break;
     }
 
     return bg;
 }
 
+/** \brief The Mesh generator.
+ * This method fills up the Nodal Coordinate matrix and the Elemental Connectivity matrix whihc define the mesh of the domain.
+ * It also takes as input the number of quadrature points in order to define the location of the quadrature points and the quadrature weights.
+ * Currently this method can only take 3 quadrature points, however, this can easily be explanded in the future.
+ * \param no_quad_points Defines the number of Guassian Quadrature Points taken along each direction in the parametric space.
+*/
 void FE::mesh(uint8_t no_quad_points){
-	//std::cout<<"Generating Mesh .."<<std::endl;
-
-    // The number of nodes is just an extension of 1D
     
-    no_of_nodes = (nelx_ + 1) * (nely_ + 1);
+    // Each element is made of of 2 nodes. Thus along each direction we will have (number of elements + 1) nodes.
+    no_of_nodes = (nelx_ + 1) * (nely_ + 1);/**< Defines the total number of nodes in the domain*/
 	std::cout<<"Total no. of nodes is "<<no_of_nodes<<std::endl;
     // Each node has 2 degrees of freedom as the number of dimensions is 2
-    dim = 2;
-    total_dofs = no_of_nodes * dim;
+    dim = 2;/**< Defines the dimension of the problem. The code only currently works for a dimension of 2.*/
+    total_dofs = no_of_nodes * dim;/**< Since each node has 2 degrees of freedom (x and y), this variable defines the total number of degrees of freedom in the domain given by (no_of_nodes * dim)*/
 
 	// Nodal Coordinate array will give the coordinates of each dof not just each node
 	NC.resize(total_dofs);
@@ -95,32 +116,45 @@ void FE::mesh(uint8_t no_quad_points){
 
 
 
-	// Make NC - NC remains the same for both the quad and the triangular elements
-
-	double incr_x = L/(nelx_); // since the nodes are equally spaced, the x coordinate will differ by this increment
-    double incr_y = -B/(nely_); // similarly, the y coordinate will differ by this incremenet
-    double x = 0.0; // first node is 0,0
+    // As I loop through all the dofs, incr_x helps me identify the which dof I am on along the x direction. Since all the nodes are equally spaced, the incr_x will be constant as well move along the x direction.
+    
+	double incr_x = L/(nelx_);
+    
+    // As I loop through all the dofs, incr_y helps me identify the which dof I am on along the y direction. Since all the nodes are equally spaced, the incr_y will be constant as well move along the y direction.The incr_y is negetive because we start from the top left corner which has the coordinates (0,B) and then move downwards. Hence, incr_y will always be negetive.
+    
+    double incr_y = -B/(nely_);
+    
+    // First node is at (0,B)
+    double x = 0.0;
     double y = B;
-    // Construct NC - NC[i][0] gives the x - coordinate of the ith global node, NC[i][1] gives the y
+    
+    // I now Construct NC - NC[i][0] gives the x - coordinate of the ith global node, NC[i][1] gives the y
     // Here, 2 dofs make up one node and hence pairs of dofs will have the same coordinates
+    // Even thoough 'dimension' number of dofs (rows in NC) will have the same values, it is important to define NC in this way as it makes the loop to calculate the Elemental Stiffnes Matrix (Klocal) much easier.
+    
+    // We increment by dim as we set both dofs of a paticular node to their respective coordinate. Makes the code a bit faster with loop unrolling.
     for(unsigned short int i = 0; i < total_dofs - 1 ; i = i + dim){
         NC[i][0] = x;
         NC[i+1][0]  = x; 
         
         NC[i][1] = y;
         NC[i+1][1] = y;
+        // We move one step down towards (0,0) along the y axis. Thus we only need to change the y coordiante until we hit the last element along the y direction.
+        
         y += incr_y;
-        // If we have reached the x limit, reset x  to 0 and increment y
+        
+        // Check if we y coordinate of our dof is at 0. Basically tells if we have reached all the way down and need to shift to the right and go back to the top of the domain.
         if(abs(NC[i][1]) < 0.0000001){
+            // Increment x and set y again to the top - breadth.
             x += incr_x;
             y = B;
         }
 
     }
-    no_of_nodes_per_element = 4;
-    // Since each node has more than 1 dof, the dofs per element will be the no of nodes per element * dimensions
-    dofs_per_ele = no_of_nodes_per_element * dim;
-    nel = nelx_ * nely_;//    Remove beow part after testing - Only for the purpose of testing
+    no_of_nodes_per_element = 4;/**<Number of nodes per element -  Since we are using Bi-linear Lagrange Basis functions, the number of nodes per element is always 4.*/
+    // Agian , since each node has more than 1 dof, the dofs per element will be the no of nodes per element * dimensions
+    dofs_per_ele = no_of_nodes_per_element * dim;/**< The degrees of freedoms per element -  Again the (number of nodes per element * dimension)*/
+    nel = nelx_ * nely_; /**< Number of Elements - Just the product of number of elements along each direction i*/
     
     EC_2.resize(nel);
     EC.resize(nel);
@@ -255,6 +289,7 @@ void FE::saveData(std::string fileName, Eigen::MatrixXd  matrix)
 void FE::init_data_structs(){
     std::cout<<"Initializing data structures"<<std::endl;
     K.resize(total_dofs,total_dofs); //Resize K
+    K.setZero();
     F.resize(total_dofs); //Resize F
     F.setZero(total_dofs); // Setting F to zero here itself since we know the size
     U.resize(total_dofs); //Resive d
@@ -361,7 +396,7 @@ void FE::assemble(Eigen::MatrixXd x,double penal){
             for(unsigned short int J = 0; J < dofs_per_ele ; J++){
                 col1 = EC[ele][J];
                 col2 = J;
-                K.coeffRef(row1, col1) += pow(x_,penal) * Klocal(row2,col2);
+                K(row1, col1) += pow(x_,penal) * Klocal(row2,col2);
                 
             }
         }
@@ -380,13 +415,13 @@ void FE::assemble(Eigen::MatrixXd x,double penal){
             }
             // All the other dofs in F are varied as we move the column of K to the RHS
             else{
-                F[row] = F[row] - g * K.coeffRef(row,i);
+                F[row] = F[row] - g * K(row,i);
             }
         }
         // Set all the diagonal elements to 1 and all the other elements in the row and column to 1
         K.row(i) *= 0;
         K.col(i) *= 0;
-        K.coeffRef(i,i) = 1.;
+        K(i,i) = 1.;
         // Set the value in F at athe node
         F[i] = g;
     }
@@ -396,9 +431,11 @@ void FE::assemble(Eigen::MatrixXd x,double penal){
 }
 Eigen::VectorXd FE::solve(){
     //std::cout<<"."<<std::endl;
+    Eigen::SparseMatrix<double> K_ = K.sparseView();
+    Eigen::SparseVector<double> F_ = F.sparseView();
     Eigen::SimplicialLDLT<Eigen::SparseMatrix<double> > solver;
-    solver.compute(K);
-    U = solver.solve(F);
+    solver.compute(K_);
+    U = solver.solve(F_);
 //    std::cout<<U<<std::endl;
     return U;
 }
