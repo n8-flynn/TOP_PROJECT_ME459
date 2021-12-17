@@ -5,6 +5,14 @@ using namespace Eigen;
 
 using namespace std; 
 
+/*! \mainpage Main functions
+*	 main.cpp
+* \n top.cpp
+* \n FE.cpp
+* \n OC.cpp
+* \n check.cpp
+*/
+
 void writeToCsv(string fileName, MatrixXd  matrix)
 {
 	//! https://eigen.tuxfamily.org/dox/structEigen_1_1IOFormat.html
