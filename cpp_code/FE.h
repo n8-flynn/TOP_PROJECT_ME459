@@ -1,7 +1,5 @@
 // Created by Huzaifa Mustafa Unjhawala
 
-/** \file The FE Class header file
- */
 #ifndef FE_H
 #define FE_H
 
