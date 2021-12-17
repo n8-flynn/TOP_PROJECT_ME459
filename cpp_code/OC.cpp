@@ -1,5 +1,6 @@
 #include "OC.h"
-
+#include <fstream>
+#include <iostream>
 using namespace Eigen;
 using namespace std;
 

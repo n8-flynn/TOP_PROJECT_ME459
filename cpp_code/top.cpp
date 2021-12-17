@@ -59,7 +59,8 @@ MatrixXd top(unsigned int nelx, unsigned int nely, double volfrac, double penal,
 				global_nodes = fe_object.EC[ele_no];
 				Ue = U(global_nodes);
 				mat_res = Ue.transpose() * fe_object.Klocal * Ue; // FE implementation is all in mat_res
-				c += pow(x(ely, elx), penal) * mat_res; //*(transpose of Ue) * KE * Ue
+//                You had removed the declaration of c but not this line. There were also other compile errors in as you had removed some important libraries. Fixed all of those as well. 
+//				c += pow(x(ely, elx), penal) * mat_res; //*(transpose of Ue) * KE * Ue
 				dc(ely, elx) = -penal * pow(x(ely, elx), (penal - 1.)) * mat_res; //*(transpose of Ue) * KE * Ue;
 			}
 		}

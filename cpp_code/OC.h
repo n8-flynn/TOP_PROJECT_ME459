@@ -8,6 +8,7 @@
 #include "Eigen"
 
 using namespace Eigen;
+using namespace std;
 
 MatrixXd OC(unsigned int nelx, unsigned int nely, double volfrac, MatrixXd x, MatrixXd dc, double move_val);
 
