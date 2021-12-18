@@ -44,34 +44,21 @@ MatrixXd top(unsigned int nelx, unsigned int nely, double volfrac, double penal,
     double pois_rat = 0.3; // Poisons ratio
     double force = -1.; // Force acting on the cantilivered beam
     double g = 0.; // The dirichlet boundary condition - For this problem we fix the left edge of the 2D domain
-
-	/*! 
-		\section Material FEM Material Properties
-		\paragraph <details> This defines the number of quadrature points we use to integrate our finite dimensional weak form in order to compute K elemental - Over here we use the 3 point guass quad rule as this is sufficient to compute the eintegration exactly.
-		\param no_quad_points Domain dimensions. 
-		\param length Defines the length along the x direction, in this case, it is equal to nelx.
-		\param breadth Defines the length along the y direction, in this case, it is equal to nely.
-		\param youngs_mod Defines the Youngs Modulus of the material. 
-		\param pois_rat Defines Poisons ratio for the material. 
-		\param force Defines the Force that is acting on the cantilivered beam. 
-		\param g The dirichlet boundary condition - For this problem we fix the left edge of the 2D domain.
-	*/
-
     // Define the FE class object
     FE fe_object(nelx,nely,length,breadth,youngs_mod,pois_rat);
+    // For more details about each FE class method, please view documentation
     
-	// Generate the mesh - This basically fills up the nodal coordinate and the element connectiviity matrices - It takes no_of_quad_points as we also fill up the 
-    // values of the quad rule in this function
-    fe_object.mesh(no_quad_points); // Initiliaze all the major datastructures to the right size
-    fe_object.init_data_structs(); // Define the boundary conditons - Currently only supports the cantilivered boundary conditions
-    fe_object.define_boundary_condition(force,g,wh);
+    // Generate the mesh - This basically fills up the nodal coordinate and the element connectiviity matrices - It takes no_of_quad_points as we also fill up the values of the quad rule in this function
+    fe_object.mesh(no_quad_points);
+    fe_object.init_data_structs(); // Initiliaze all the major datastructures to the right size
+    fe_object.define_boundary_condition(force,g,wh); // Define the boundary conditions
     fe_object.cal_k_local();
 	printf("Solving");
 	
 	while (change > 0.0001 && x.sum() > 0.95 * volfrac * nely * nelx) {
 		xold = x;
-		fe_object.assemble(x, penal);
-		U = fe_object.solve();
+		fe_object.assemble(x, penal); // Generate K global based on x and penalty
+		U = fe_object.solve(); // Determine solution vector U
 		unsigned short int ele_no;
 		vector<unsigned short int> global_nodes;
 		VectorXd Ue;
@@ -81,10 +68,10 @@ MatrixXd top(unsigned int nelx, unsigned int nely, double volfrac, double penal,
 		for (unsigned short int ely = 0; ely < nely; ely++) {
 			for (unsigned short int elx = 0; elx < nelx; elx++) {
 				ele_no = elx * nely + ely;
-				global_nodes = fe_object.EC[ele_no];
-				Ue = U(global_nodes);
-				mat_res = Ue.transpose() * fe_object.Klocal * Ue; // FE implementation is all in mat_res
-				dc(ely, elx) = -penal * pow(x(ely, elx), (penal - 1.)) * mat_res; //*(transpose of Ue) * KE * Ue;
+				global_nodes = fe_object.EC[ele_no]; // EC , the elemental connectivity matrix will give us the global nodes corresponding to the element number
+				Ue = U(global_nodes); // Extract the elemental U (Ue) from the global U using the global nodes vector
+				mat_res = Ue.transpose() * fe_object.Klocal * Ue; // mat_res you could say is almost like the elemental compliance without the relative densities x multiplied. This is done as directly putting this into the below formula gives a compile error for some reason.
+				dc(ely, elx) = -penal * pow(x(ely, elx), (penal - 1.)) * mat_res; // dc is nothing but the change in compliance c with respect to the relative densities x. This is nothing but the sensitivity. 
 			}
 		}
 

@@ -101,11 +101,11 @@ inline std::vector<double> FE::basis_gradient(unsigned short int node,double xi,
 void FE::mesh(uint8_t no_quad_points){
     
     // Each element is made of of 2 nodes. Thus along each direction we will have (number of elements + 1) nodes.
-    no_of_nodes = (nelx_ + 1) * (nely_ + 1);/**< Defines the total number of nodes in the domain*/
+    no_of_nodes = (nelx_ + 1) * (nely_ + 1);// Defines the total number of nodes in the domain
 	std::cout<<"Total no. of nodes is "<<no_of_nodes<<std::endl;
     // Each node has 2 degrees of freedom as the number of dimensions is 2
-    dim = 2;/**< Defines the dimension of the problem. The code only currently works for a dimension of 2.*/
-    total_dofs = no_of_nodes * dim;/**< Since each node has 2 degrees of freedom (x and y), this variable defines the total number of degrees of freedom in the domain given by (no_of_nodes * dim)*/
+    dim = 2;// Defines the dimension of the problem. The code only currently works for a dimension of 2.
+    total_dofs = no_of_nodes * dim;// Since each node has 2 degrees of freedom (x and y), this variable defines the total number of degrees of freedom in the domain given by (no_of_nodes * dim)
 
 	// Nodal Coordinate array will give the coordinates of each dof not just each node
 	NC.resize(total_dofs);
@@ -151,10 +151,12 @@ void FE::mesh(uint8_t no_quad_points){
         }
 
     }
-    no_of_nodes_per_element = 4;/**<Number of nodes per element -  Since we are using Bi-linear Lagrange Basis functions, the number of nodes per element is always 4.*/
+    // Note - Have to decide whether to remove EC_2 or keep it
+    
+    no_of_nodes_per_element = 4;//<Number of nodes per element -  Since we are using Bi-linear Lagrange Basis functions, the number of nodes per element is always 4.
     // Agian , since each node has more than 1 dof, the dofs per element will be the no of nodes per element * dimensions
-    dofs_per_ele = no_of_nodes_per_element * dim;/**< The degrees of freedoms per element -  Again the (number of nodes per element * dimension)*/
-    nel = nelx_ * nely_; /**< Number of Elements - Just the product of number of elements along each direction i*/
+    dofs_per_ele = no_of_nodes_per_element * dim;//< The degrees of freedoms per element -  Again the (number of nodes per element * dimension)
+    nel = nelx_ * nely_; //< Number of Elements - Just the product of number of elements along each direction i
     
     EC_2.resize(nel);
     EC.resize(nel);
@@ -168,18 +170,32 @@ void FE::mesh(uint8_t no_quad_points){
     
     nnx_ = nelx_ + 1; // Number of nodes along x
     nny_ = nely_ + 1; // Number of nodes along y
-    unsigned short int inc_x_ = 0; // Tells how many increments we have had in x
-    unsigned short int inc_y_ = 0; // Tells how many increments we have had in y
+    unsigned short int inc_x_ = 0; //Again, like in NC - tells how many increments we have had in x
+    unsigned short int inc_y_ = 0; // Again like in NC - tells how many increments we have had in y
     
-    // Construct EC - EC[i][j] gives the global node number for local node j in element i
+    // Construct EC_2 - EC_2[i][j] gives the global node number for local node j in element i. Stress on node number as that is the difference between EC and EC_2. EC_2 gives the global node number wheras EC gives the gloabl degree of freedom.
     for(unsigned short int i = 0; i < nel;i++){
-//            If we have reached last node on x, we increment y and reset our x coutner
+        // Similar to NC, if we reach the last element along the Y direction for a paticular X, we increment X and set the uncr_y to 0. Basically moving to one column on the right
         if(inc_y_ == nny_ - 1){
             inc_x_+=1;
             inc_y_ = 0;
         }
-//            Storing clockwise on each element - pattern was hand derived using some examples for lesser number of elements
-//            Node numbers increase left to right. Inc_y takes us to the nodes of the element 1 level down
+        // The local node numbering is in the anti clockwise direction as can be seen below
+        // 1---------4
+        // -----------
+        // -----------
+        // -----------
+        // 2---------3
+        
+        // So,for the first element this will correspond to the following global node numbers (nny is the number of nodes along y)
+        
+        //1-----------nny+1
+        //----------------
+        //----------------
+        //----------------
+        //2----------nny+2
+        
+        // Going off the above diagrams we get the following pattern. Loop unrolling done for simplicity of code and better performance.
         EC_2[i][0] = i + inc_x_;
         EC_2[i][1] = i + 1 + inc_x_;
         EC_2[i][2] = nny_ + 1 + i + inc_x_;
@@ -187,34 +203,50 @@ void FE::mesh(uint8_t no_quad_points){
         inc_y_ += 1;
     }
     
-    //unsigned short int nnx = nelx_ + 1; // Number of nodes along x
-    unsigned short int nny = nely_ + 1; // Number of nodes along y
-   // unsigned short int dofs_x = nnx * 2; // Number of dofs along x
-    unsigned short int dofs_y = nny * 2; // Number of dofs along y
-    unsigned short int inc_x = 0; // Tells how many increments we have had in x
-    unsigned short int inc_y = 0; // Tells how many increments we have had in y
+    unsigned short int dofs_y = nny_ * 2; // Number of dofs along y - needed as now we are constructing EC which gives the global dof number for a local dof number of a paticular element.
+    // I set the our increments back to 0
+    inc_x_ = 0;
+    inc_y_ = 0;
+    // I introduce a new variable n_count in order to count the total number of dofs we have completed accounting for. This was introduced to help with the algorithim as I could not think of any other way to do it.
     unsigned short int n_count = 0;
-    // Construct EC - EC[i][j] gives the global node number for local node j in element i
+    // Construct EC - EC[i][j] gives the global dof number for local dof j in element i
+    
+    // Again, like above we go in an anticlockwise direction for our local dof numbering
+    //1,2-------7,8
+    //-----------
+    //-----------
+    //-----------
+    //3,4------5,6
+    
+    // This corresponds to a global DOF of
+    //1,2-------dofs_y+1,dofs_y+2
+    //----------
+    //----------
+    //----------
+    //3,4-------dofs_y+3,dofs_y+4
+    
+    
     for(unsigned short int i = 0; i < nel;i++){
-   //            If we have reached last node on x, we increment y and reset our x coutner
-           if(inc_y == dofs_y - 2){
-               inc_x+=2;
-               inc_y = 0;
+            //
+           if(inc_y_ == dofs_y - 2){
+               inc_x_+=2;
+               inc_y_ = 0;
            }
-       //      Storing clockwise on each element - pattern was hand derived using some examples for lesser number of elements
-       //        Node numbers increase left to right. Inc_y takes us to the nodes of the element 1 level down
-               EC[i][0] = n_count + inc_x;
+                // Again going off the above logic, this is the best way I could think off doing it. Again, there is sone loop unrolling and uses some elements that are already present in the cache (temporal and spatial locality) for better performance.
+               EC[i][0] = n_count + inc_x_;
                EC[i][1] = EC[i][0] + 1;
                EC[i][2] = EC[i][1] + 1;
                EC[i][3] = EC[i][2] + 1;
-               EC[i][4] = dofs_y + n_count + inc_x + 2; //Clock wise direction
+               EC[i][4] = dofs_y + n_count + inc_x_ + 2;
                EC[i][5] = EC[i][4] + 1;
-               EC[i][6] = dofs_y + n_count + inc_x;
+               EC[i][6] = dofs_y + n_count + inc_x_;
                EC[i][7] = EC[i][6] + 1;
-               inc_y += 2;
+               inc_y_ += 2;
                n_count +=2;
     }
-    // Set up quadrature data - Cant change number of quad points for now - Can include functionality with simple if-else if needed
+
+    // The below code defines the Guassian Quadrature and weights.
+    
     quad_rule = no_quad_points;
     quad_points.resize(quad_rule); //Resize quadpoints to appropriate size
     for(uint8_t i = 0; i < quad_rule; i++){
@@ -233,13 +265,18 @@ void FE::mesh(uint8_t no_quad_points){
     quad_weights[1] = 8./9.;
     quad_weights[2] = 5./9.;
 }
-
+/** \brief Defines the boundary conditions on the problem.
+ * Given the force, the location of the force and the dirichlet displacement, this function assembles the boundary values and the boudary nodes vectors. The F vector which makes up the RHS of the system we eventually solve is also modified with the force value added to the appropriate row.
+ * \param force The value of the external force that we apply on our domain
+ * \param g The value of the dirichlet boundary condition (displacement)
+ * \param wh This tells us where the force is to be applied. A value of 0 applies the force at (L,0). A value of 1 applies the force at (L/2,B/2). A value of 2 applied the force at (L,B).
+ */
 void FE::define_boundary_condition(double force, double g,int wh){
     std::cout<<std::endl<<"Defining boundary condition"<<std::endl;
-//    Initialize the Dirichlet and Neumann boundary condtions
+    // Assign the required inputs to class members
     g1 = g;
     f1 = force;
-//    At each dof which is a boundary, we will put the value of g1, else we will put 0
+//    At each dof which is a boundary, I will put the value of g1, else we will put 0
     boundary_values.resize(total_dofs);
 //    This function defines the boundary condition for a cantilivered beam i.e. all dofs at x = 0 have 0 displacement
     for(unsigned short int dof_no = 0; dof_no < total_dofs ; dof_no++){
@@ -247,7 +284,8 @@ void FE::define_boundary_condition(double force, double g,int wh){
             boundary_values[dof_no] = g1;
             boundary_nodes.push_back(dof_no);
         }
-        // We define the F matrix fully here itself as we have no body force and just a force on the bottom right node acting downwards - Note, the way NC is set up, downwards is +ve Y axis and east is +ve x axis
+        // We assign the force to the F vector here - Note, the way NC is set up, downwards is +ve Y axis and east is +ve x axis. Another note - There is no body force and all the dirichlet boundary conditions are 0 and hence this will be all there is to the F vector.
+        // Based on wh, we apply the force to the appropriate node and DOF (Y axis in our case as we are applying a downward force).
         if(wh == 0){
             if((abs(NC[dof_no][0] - L) < 0.00001) && (abs(NC[dof_no][1]) < 0.00001)){
                 F[dof_no] = 0; // There are 2 dofs that satisfy this constraint - the first one is the x dof so this will be 0
@@ -272,7 +310,10 @@ void FE::define_boundary_condition(double force, double g,int wh){
     }
 
 }
-
+/** \brief A method to save Eigen Matrices and Vectors as CSV files for debugging purposes.
+ * \param fileName The name of the csv file to be saved
+ * \param matrix The Eigen Matrix that is to be stored as a csv file
+ */
 void FE::saveData(std::string fileName, Eigen::MatrixXd  matrix)
 {
     //https://eigen.tuxfamily.org/dox/structEigen_1_1IOFormat.html
@@ -286,6 +327,11 @@ void FE::saveData(std::string fileName, Eigen::MatrixXd  matrix)
     }
 }
 
+/** \brief Initializes all the datastructres that are needed to solve the linear system of equations and deterimine U
+ * The K matrix (Global Stiffness Matrix) is resized to size (total dofs, total dofs) and all elements are set to zero.
+ * The F Vector is resized to size (total dofs) and all elements are set to zero.
+ * The solution vector U (displacement vector) is resized to size (total dofs).
+ */
 void FE::init_data_structs(){
     std::cout<<"Initializing data structures"<<std::endl;
     K.resize(total_dofs,total_dofs); //Resize K
@@ -295,6 +341,14 @@ void FE::init_data_structs(){
     U.resize(total_dofs); //Resive d
 }
 
+/** \brief This is an inline function used to compute the value of the elasticity tensor at i,j,k and l.
+ * I am using a standard linear isotropic material and thus \f$(\lambda = \frac{\nu E}{(1 + \nu)(1-2\nu)})\f$ and \f$(\mu = \frac{E}{2(1+\nu)})\f$.
+ * C is thus \f$(\lambda\delta_{IJ}\delta_{KL} + \mu(\delta_{IK}\delta_{JL} + \delta_{IL}\delta_{JK}))\f$. Where \f$(\delta)\f$ is the kronecker detla.
+ * \param i Pyhsical dimension that goes from 0 to dimension - 1.
+ * \param j Pyhsical dimension that goes from 0 to dimension - 1.
+ * \param k Pyhsical dimension that goes from 0 to dimension - 1.
+ * \param l Pyhsical dimension that goes from 0 to dimension - 1.
+ */
 // Function for calculating the value of C - elasticity tensor
 
 inline double FE::C(uint8_t i, uint8_t j, uint8_t k, uint8_t l){
@@ -303,51 +357,60 @@ inline double FE::C(uint8_t i, uint8_t j, uint8_t k, uint8_t l){
     return lambda * (i==j) * (k==l) + mu * ((i==k)*(j==l) + (i==l)* (j==k));
 }
 
+
+/** \brief This function is used to evaluate the Jacobian matrix, its inverse and its determinant at a paticular guassian quadrature point.
+ * The Jacobian is calculated in a speerate inline function to prevent clutter in the already cluttered elemental K code.
+ * \param q1 Identifies the number of the quadrature point along the 'xi' direction
+ * \param q2 Identifies the number of the quadrature point along the 'eta' direction
+ */
 inline void FE::cal_jac(uint8_t q1, uint8_t q2){
-    Eigen::MatrixXd Jac;
-    Jac.resize(dim,dim);
-    invJ.resize(dim,dim);
+    Eigen::MatrixXd Jac; // Define Jacobian locally as we only really need inverse of jacobian
+    Jac.resize(dim,dim); // Resize jacobian to appropirate size
+    invJ.resize(dim,dim); // Resize our class member Inverse of Jacobian to appropriate size
     for(uint8_t i = 0; i < dim; i++){
         for(uint8_t j = 0; j < dim; j++){
             Jac(i,j) = 0;
             // Looping through the nodes of an element
             for(unsigned short int A = 0; A < no_of_nodes_per_element; A++){
                 // Over here dim*A is used because EC has dim dofs per node. Each of these dofs have the same coordinate, so we can pick either one while calculating the jacobian. Over here, we use all the even dofs
+                // quad_points[q1][0] gives the 'xi' component of quad point q1 wheras using quad_points[q2][1] gives us the 'eta component.
                 Jac(i,j) += NC[EC[0][dim*A]][i] * basis_gradient(A, quad_points[q1][0], quad_points[q2][1])[j];
             }
         }
     }
+    // Standard methods on Eigen Matrices to get the determinant and the inverse
     detJ = Jac.determinant();
     invJ = Jac.inverse();
-//    saveData("invJ.csv", invJ);
 }
+
+
+/**\brief This method is used to fill up the elemental K matrix.
+ * Since our domain is made up of all the same type of elements with equal sizing, the cal_k_local method is only called once to fing the K elemental for the 1st element since all the elements will have the same k local.
+ */
+
 
 void FE::cal_k_local(){
     std::cout<<"Determining Klocal"<<std::endl;
-    // Initializing Klocal
+    // Resizing Klocal and setting all its elements to 0.
     Klocal.resize(dofs_per_ele,dofs_per_ele);
     Klocal.setZero();
-//    for(int res = 0; res < dofs_per_ele; res++){
-//        Klocal[res] = std::vector<double>(dofs_per_ele);
-//    }
-    
-
-//    std::fill(Klocal.begin(), Klocal.end(), std::vector<double>(dofs_per_ele, 0.));
+    // First we loop over the quadrature points. Since we have quadrature points in both directions, we loop over the quad points 2 times to get the 9 totoal combinations of quadrature points.
     for(uint8_t q1 = 0; q1 < quad_rule ; q1++){
         for(uint8_t q2 = 0; q2 < quad_rule ; q2++){
+            // For a patricular quad point, we calculate the jacobian. This will fill up the inverse Jacobian matrix and calculate the determinant of the jacobian.
             cal_jac(q1,q2);
-            // Now we go ahead and fill in the Klocal array
+            // Then we loop over the nodes in order to recreate the weak form of the problem - we first loopover A for spacial locality
             for(unsigned short int A = 0; A < no_of_nodes_per_element; A++){
-                // Capital I and K denote the physical coordinates
+                // Capital I and K denote the physical coordinates - We first loop over I for spcial locality
                 for(uint8_t I = 0; I < dim; I++){
                     for(unsigned short int B=0 ; B < no_of_nodes_per_element; B++){
                         for(uint8_t K = 0; K < dim; K++){
                             for(uint8_t J = 0; J < dim; J++){
                                 for(uint8_t L = 0; L < dim; L++){
-                                    // Looping over the parametric coordinates - I think we only need to loop over j and k since only those indicies are used - Not sure though
+                                    // Looping over the parametric coordinates j and l.
                                     for(uint8_t j = 0; j < dim; j++){
                                         for(uint8_t l = 0; l < dim; l++){
-                                            // Added i and k since we maybe do need it - Need to figure out how to reduce these number of loops - Will be too slow
+                                            // Since we are only looping over the nodes per element, we need to use dim*A + I in order to fill all the degrees of freedom per element. Each evaluation requires alot of function calls, however, all of these functions are defined as inline functions and is thus hopefully faster.
                                             Klocal(dim*A + I,dim*B + K) += (basis_gradient(A, quad_points[q1][0], quad_points[q2][1])[j] * invJ(j,J)) * C(I,J,K,L) * (basis_gradient(B, quad_points[q1][0], quad_points[q2][1])[l] * invJ(l,L)) * detJ * quad_weights[q1] * quad_weights[q2];
                                         }
                                     }
@@ -360,37 +423,37 @@ void FE::cal_k_local(){
             }
         }
     }
-//    saveData("k_local.csv", Klocal);
 }
-
+/** \brief This method takes the K local found by cal_k_local and assembles the K Global Matrix.
+ * In addition it also modifies the K global to account for the Dirichlet Boundary conditions. While assembling the K global matrix, the K local value at the appropriate local node is multiplied by the relative density 'x' of that paticular element raised to a power 'penal' which is the panalization power. In mathematical terms -
+ * \f$(K(global dof A, global dof B) = x(global element number along y, global element number along x)^{penal} klocal(local dof A, local dof B))\f$.
+ * Note - This is the function that is evaluated at every optimization loop and it is thus the most cruicial function in terms of performance.
+ * \param x This is the relative densities Eigen Matrix that is used for the topology optimization.
+ * \param penal The penalization power. The penalization power is used to refine the solution to solid and void regions to aid manufacturibility.As we can see from the formula, it will make the values closer to 0 go faster towards 0 and the values closer to 1 go faster towards 1.
+ */
 
 void FE::assemble(Eigen::MatrixXd x,double penal){
-    //std::cout<<"Assembling and applying dirichlet conditions"<<std::endl;
-//    Klocal<<0.4945,0.1786,-0.3022,-0.0137,-0.2473,-0.1786,0.0549,0.0137,
-//            0.1786,0.4945,0.0137,0.0549,-0.1786,-0.2473,-0.0137,-0.3022,
-//            -0.3022,0.0137,0.4945,-0.1786,0.0549,-0.0137,-0.2473,0.1786,
-//            -0.0137,0.0549,-0.1786,0.4945,0.0137,-0.3022,0.1786,-0.2473,
-//            -0.2473,-0.1786,0.0549,0.0137,0.4945,0.1786,-0.3022,-0.0137,
-//            -0.1786,-0.2473,-0.0137,-0.3022,0.1786,0.4945,0.0137,0.0549,
-//            0.0549,-0.0137,-0.2473,0.1786,-0.3022,0.0137,0.4945,-0.1786,
-//            0.0137,-0.3022,0.1786,-0.2473,-0.0137,0.0549,-0.1786,0.4945;
+    // We need ely and elx as x is defined as a 2 d matrix where the relative density at (ely,elx) is the relative density at ely th row and the elx th column.
     unsigned short int ely = 0;
     unsigned short int elx = 0;
     double x_;
-//    These are all dummy variables
-    unsigned short int row1;
-    unsigned short int col1;
-    unsigned short int row2;
-    unsigned short int col2;
+//    These are all dummy variables to have temporal locaility - Unsure if the compiler will take care of this
+    unsigned short int row1; // Corresponds to the global node's row in K
+    unsigned short int col1; // Corresponds to the global node's column in K
+    unsigned short int row2; // Corresponds to the local node's row in klocal
+    unsigned short int col2; // Corresponds to the local nodes column in klocal
     for(unsigned short int ele = 0; ele < nel ; ele++){
         if(ely == nely_){
             ely = 0;
             elx++;
         }
+        // Evaluate it and store it here itself for temporal locality
         x_ = x(ely,elx);
         ely++;
         // Now we assemble the Klocal into the K matrix which is the global matrix
+        // For spatial locality we loop over I first
         for(unsigned short int I = 0; I < dofs_per_ele ; I++){
+            // We store row1 and row 2 as its not going to change in the next loop and it is costly evaluating it in each loop
             row1 = EC[ele][I];
             row2 = I;
             for(unsigned short int J = 0; J < dofs_per_ele ; J++){
@@ -401,34 +464,38 @@ void FE::assemble(Eigen::MatrixXd x,double penal){
             }
         }
     }
-//    std::cout << "The determinant of K is " << K.determinant() << std::endl;
-//    saveData("k_before.csv", K);
     // Now we apply the Dirichlet boundary conditons and modify K accordingly
-   // std::cout<<"Applying Dirichlet BC's"<<std::endl;
+    
+    // First we loop over all the boundary nodes that were identified in the define_boundary_cond() function
     for(unsigned short int i : boundary_nodes){
+        // Get the value g (displacement) at that boundary node - In our case, g is always 0
         double g = boundary_values[i];
-        // Loop to move the approprate column of K to the RHS - source - https://www.math.colostate.edu/~bangerth/videos.676.21.65.html
+        // Loop to move the approprate column of K to the RHS - The source of this algorithm is from - https://www.math.colostate.edu/~bangerth/videos.676.21.65.html
         for(unsigned short int row = 0; row < total_dofs; row++){
             // This condition is so that a dof which has already been set in F is not changed
             if(row == i){
                 continue;
             }
-            // All the other dofs in F are varied as we move the column of K to the RHS
+            // All the other dofs in F are varied as we move the column of K to the RHS - In our case, F is not modified at all since g is zero. This loop can be removed if we seek more performance. However, for non zero g, this loop is necessary.
+            // This basically moves the known varibales from the LHS to the RHS
             else{
                 F[row] = F[row] - g * K(row,i);
             }
         }
-        // Set all the diagonal elements to 1 and all the other elements in the row and column to 1
+        // Set all the diagonal elements to 1 and all the other elements in the row and column to 0
         K.row(i) *= 0;
         K.col(i) *= 0;
         K(i,i) = 1.;
-        // Set the value in F at athe node
+        // Set the value in F at at the node - In our case it will always set to 0.
         F[i] = g;
     }
-//    std::cout << "After applying BC the determinant of K is " << K.determinant() << std::endl;
-//    saveData("k_after.csv", K);
-//    std::cout<<K<<std::endl;
 }
+
+
+/** \brief Solves the linear system of equations KU = F using a Sparse LDLT Cholesky Decomoposition method provided by Eigen
+ * The K and F global matrices that were defined and filled as Dense matrices, they are converted into sparse matrix using the sparseView() method available in Eigen. This is done because these matrices are in fact sparse and using sparse matrix over dense matrices dramatically speeds up the solving of the system of linear equations.
+ * This method returns the solution vector U to the toplogy function where it is used to find the compliance 'c'.
+ */
 Eigen::VectorXd FE::solve(){
     //std::cout<<"."<<std::endl;
     Eigen::SparseMatrix<double> K_ = K.sparseView();
@@ -440,6 +507,7 @@ Eigen::VectorXd FE::solve(){
     return U;
 }
 
+/** \brief Used to write the solution U to a .vtu file for visulisation and debugging.s*/
 void FE::fem_to_vtk(){
         
     // Write to file all the stuff that is needed for plotting
