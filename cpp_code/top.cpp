@@ -67,7 +67,7 @@ MatrixXd top(unsigned int nelx, unsigned int nely, double volfrac, double penal,
     fe_object.define_boundary_condition(force,g,wh);
     fe_object.cal_k_local();
 	printf("Solving");
-
+	
 	while (change > 0.0001 && x.sum() > 0.95 * volfrac * nely * nelx) {
 		xold = x;
 		fe_object.assemble(x, penal);
