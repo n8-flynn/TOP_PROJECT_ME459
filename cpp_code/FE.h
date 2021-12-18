@@ -59,11 +59,11 @@ class FE{
         double penal_;/**< The Penaltly applied - This is related to the topology optimization algorithm*/
         double detJ;/**< The determinant of the Jacobian that is used to move from the parametric cooridnate system to the actual coordinate system*/
         
-        unsigned short int nelx_;/**< Number of elements along the x direction*/
-        unsigned short int nely_;/**< Number of elements along the y direction*/
+        unsigned short int nelx_;/**< Number of elements in the horizontal direction*/
+        unsigned short int nely_;/**< Number of elements in the vertical direction*/
         unsigned short int nel;/**< Total Number of elements*/
-        unsigned short int nnx_;/**< Number of nodes along the x direction*/
-        unsigned short int nny_;/**< Number of nodes along the y direction*/
+        unsigned short int nnx_;/**< Number of nodes along the horizontal direction*/
+        unsigned short int nny_;/**< Number of nodes along the vertical direction*/
         unsigned short int no_of_nodes;/**< Total Number of nodes*/
         unsigned short int no_of_nodes_per_element;/**< Number of nodes per element*/
         unsigned short int total_dofs;/**< Total number of degrees of freedom.Derived from number of nodes and the dimension of the problem. Degrees of Freedom are necesarry since we are solving a vector problem and thus at each node we will have a solution in 2 directions or 2 "degrees of freedom"*/

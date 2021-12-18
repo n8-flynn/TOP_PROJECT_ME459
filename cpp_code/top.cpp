@@ -37,8 +37,7 @@ MatrixXd top(unsigned int nelx, unsigned int nely, double volfrac, double penal,
 		\param move Used to index elements by x during the optimization function. 
 	*/
 
-	uint8_t no_quad_points = 3; 
-	
+	uint8_t no_quad_points = 3; //Domain dimensions.
 	double length = nely; //  Length
 	double breadth = nelx; // Breadth
    	double youngs_mod = 1; // Youngs Modulus of the material
@@ -48,16 +47,20 @@ MatrixXd top(unsigned int nelx, unsigned int nely, double volfrac, double penal,
 
 	// Define the FE class object
     FE fe_object(nelx,nely,length,breadth,youngs_mod,pois_rat);
-    // For more details about each FE class method, please view documentation
     
+	// For more details about each FE class method, please view documentation
     // Generate the mesh - This basically fills up the nodal coordinate and the element connectiviity matrices - It takes no_of_quad_points as we also fill up the values of the quad rule in this function
     fe_object.mesh(no_quad_points);
     fe_object.init_data_structs(); // Initiliaze all the major datastructures to the right size
     fe_object.define_boundary_condition(force,g,wh); // Define the boundary conditions
     fe_object.cal_k_local();
-	printf("Solving");
 	
-	while (change > 0.0001 && x.sum() > 0.95 * volfrac * nely * nelx) {
+	printf("Solving");
+
+	double condition_one = 0.0001; //Convergence criteria number 1. When the difference between the maximum coeff in x and xold is less than condition 1, the while loop is exitted.  
+	double condition_two = 0.95 * volfrac * nely * nelx; //Convergence criteria number 2. When the sum of the density matrix x is less than the original volume fraction field, the while loop is exitted. 
+	
+	while (change > condition_one && x.sum() > condition_two) {
 		xold = x;
 		fe_object.assemble(x, penal); // Generate K global based on x and penalty
 		U = fe_object.solve(); // Determine solution vector U
@@ -77,7 +80,7 @@ MatrixXd top(unsigned int nelx, unsigned int nely, double volfrac, double penal,
 			}
 		}
 
-		dc = check(nelx, nely, rmin, x, dc);
+		dc = check(nelx, nely, rmin, x, dc); //Mesh filter 
 		x = OC(nelx, nely, volfrac, x, dc, move); //Optimization criteria function.
 
 		xchange = (x - xold).cwiseAbs(); //Compares the old volume fraction field with the new field. 
