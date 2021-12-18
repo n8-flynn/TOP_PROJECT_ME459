@@ -21,13 +21,13 @@ MatrixXd top(unsigned int nelx, unsigned int nely, double volfrac, double penal,
 	
 	double change = 1.0;
 	double move = 0.2; 
-	MatrixXd x(nely, nelx);
-	x.setConstant(volfrac); 
-	MatrixXd dc(nely, nelx);  
+	MatrixXd x(nely, nelx); //Volume fraction field that is nely by nelx.
+	x.setConstant(volfrac); //Sets all the elements in the x matrix to the value of the volfrac variable to initialize the variable. 
+	MatrixXd dc(nely, nelx); //Compliance domain matrix that is nely by nelx.
 	MatrixXd xold(nely, nelx);	
 	MatrixXd xchange(nely, nelx);
-	xchange.setZero();
-	VectorXd U; 
+	xchange.setZero(); //Sets the xchange matrix to zero to initialize it. 
+	VectorXd U; //Finite element displacement vector. 
 
 	/*!
 		\section Variables Top variables
@@ -37,14 +37,16 @@ MatrixXd top(unsigned int nelx, unsigned int nely, double volfrac, double penal,
 		\param move Used to index elements by x during the optimization function. 
 	*/
 
-	uint8_t no_quad_points = 3; // Domain dimensions
+	uint8_t no_quad_points = 3; 
+	
 	double length = nely; //  Length
 	double breadth = nelx; // Breadth
    	double youngs_mod = 1; // Youngs Modulus of the material
     double pois_rat = 0.3; // Poisons ratio
     double force = -1.; // Force acting on the cantilivered beam
     double g = 0.; // The dirichlet boundary condition - For this problem we fix the left edge of the 2D domain
-    // Define the FE class object
+
+	// Define the FE class object
     FE fe_object(nelx,nely,length,breadth,youngs_mod,pois_rat);
     // For more details about each FE class method, please view documentation
     

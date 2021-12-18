@@ -30,8 +30,8 @@ MatrixXd mmin(MatrixXd m1, MatrixXd m2,MatrixXd m3) {
         \param m3 Output array.
     */
 
-    int r = m1.rows();
-    int c = m1.cols();
+    size_t r = m1.rows();
+    size_t c = m1.cols();
 
     for (int i = 0; i < r; i++) {
         for (int j = 0; j < c; j++) {
@@ -54,8 +54,8 @@ MatrixXd mmax(MatrixXd m1, MatrixXd m2, MatrixXd m3) {
         \param m3 Output array.
     */
     
-    int r = m1.rows();
-    int c = m1.cols();
+    size_t r = m1.rows();
+    size_t c = m1.cols();
     
     for (int i = 0; i < r; i++) {
         for (int j = 0; j < c; j++) {
@@ -72,7 +72,10 @@ MatrixXd mmax(MatrixXd m1, MatrixXd m2, MatrixXd m3) {
 
 MatrixXd OC(unsigned int nelx, unsigned int nely, double volfrac,MatrixXd x,MatrixXd dc, double move_val) {
     /*!
-        \brief Optimization criteria based optimizer. 
+        \brief Optimization criteria based optimizer. Based off of Solid Isotropic Material with Penalization (SIMP) method developed by Bendsoe and Sigmund. 
+        *Using this function will predict the best material distribution within the x Matrix. 
+        *Assigns densities of 1 and 0 to the domain of x.
+        *Material is needed at densities equal to 1 and material is not needed at densities of 0.
         \param nelx Number of elements in the x direction.
         \param nely Number of elements in the y direction.
         \param volfrac Volume fraction.
@@ -81,11 +84,11 @@ MatrixXd OC(unsigned int nelx, unsigned int nely, double volfrac,MatrixXd x,Matr
         \param move_val Distance volume fraction matrix is indexed (not sure on this).
     */
     
-    double l1 = 0.0;
-	double l2 = 100000;
-	double lmid;
-	double op1 = 0.001;
-	double op2 = 1.0;
+    double l1 = 0.0; //Lower bound of the lagrangian multiplier. 
+	double l2 = 100000; //Upper boud of the lagrandgian multiplier. 
+	double lmid; //Bound half way beteen the lower and upper bound. 
+	double op1 = 0.001; //Optimal criteria #1
+	double op2 = 1.0; //Optimal criteria #2
 	
 	MatrixXd move(nely, nelx); 
     move.setConstant(move_val);
@@ -99,16 +102,16 @@ MatrixXd OC(unsigned int nelx, unsigned int nely, double volfrac,MatrixXd x,Matr
     MatrixXd op2m(nely, nelx); 
     op2m.setConstant(op2);
 
-	while (l2 - l1 > 0.0001) {
+	while (l2 - l1 > 0.0001) { //Convergence criteria.
 		lmid = 0.5 * (l2 + l1);
        
         MatrixXd r1 = x.array()*((-dc/lmid).cwiseSqrt()).array();
         MatrixXd r2 = x + move;
         
-        MatrixXd r3(nely,nelx);
-        r3 = mmin(r2,r1,r3);
+        MatrixXd r3(nely,nelx); 
+        r3 = mmin(r2,r1,r3); 
         
-        MatrixXd r4(nely,nelx);
+        MatrixXd r4(nely,nelx); 
         r4 = mmin(r3,op2m,r4);
         
         MatrixXd r5 = x - move;
@@ -121,12 +124,15 @@ MatrixXd OC(unsigned int nelx, unsigned int nely, double volfrac,MatrixXd x,Matr
         xnew = r7;
         
 		if (xnew.sum() - volfrac * nelx * nely > 0) {
+            //Used to increase or degree the bounds of the lagrangian multiplier.
+            //If the sum of the densities in x is larger then the total density of the domain, the bounds become between lmid and l2.
+            //If the sume of the densities in x is less then the total density of the domain, the bounds become between l1 and lmid. 
 			l1 = lmid;
 		}
 		else
 			l2 = lmid;
 	}
-	return xnew;
+	return xnew; //Returns the optimized / updated density field x as xnew. 
 }
 
 

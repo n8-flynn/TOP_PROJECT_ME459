@@ -33,7 +33,7 @@ void writeToCsv(string fileName, MatrixXd  matrix)
 
 MatrixXd mfilter(MatrixXd &m1, double filter) {
 	/*!
-		\brief Used to filter elements to only 1's or 0's - used in testing.
+		\brief Used to filter elements to only 1's or 0's. If the value in the matrix is less than the inputed value, then it will be turned to zero. If the value in the matrix is greater than the value given to the function, it will be turned to 1.
 		\param m1 Address of the desired Eigen matrix to filter / overwrite. 
 		\param filter Value used to filter matrix.
 	*/
