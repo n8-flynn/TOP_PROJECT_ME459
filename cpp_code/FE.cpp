@@ -93,7 +93,7 @@ inline std::vector<double> FE::basis_gradient(unsigned short int node,double xi,
 }
 
 /** \brief The Mesh generator.
- * This method fills up the Nodal Coordinate matrix and the Elemental Connectivity matrix whihc define the mesh of the domain.
+ * This method fills up the Nodal Coordinate matrix and the Elemental Connectivity matrix which define the mesh of the domain.
  * It also takes as input the number of quadrature points in order to define the location of the quadrature points and the quadrature weights.
  * Currently this method can only take 3 quadrature points, however, this can easily be explanded in the future.
  * \param no_quad_points Defines the number of Guassian Quadrature Points taken along each direction in the parametric space.
@@ -269,7 +269,7 @@ void FE::mesh(uint8_t no_quad_points){
  * Given the force, the location of the force and the dirichlet displacement, this function assembles the boundary values and the boudary nodes vectors. The F vector which makes up the RHS of the system we eventually solve is also modified with the force value added to the appropriate row.
  * \param force The value of the external force that we apply on our domain
  * \param g The value of the dirichlet boundary condition (displacement)
- * \param wh This tells us where the force is to be applied. A value of 0 applies the force at (L,0). A value of 1 applies the force at (L/2,B/2). A value of 2 applied the force at (L,B).
+ * \param wh This tells us where the force is to be applied. A value of 0 applies the force at (L,0). A value of 1 applies the force at (L,B/2). A value of 2 applied the force at (L,B).
  */
 void FE::define_boundary_condition(double force, double g,int wh){
     std::cout<<std::endl<<"Defining boundary condition"<<std::endl;
@@ -327,7 +327,7 @@ void FE::saveData(std::string fileName, Eigen::MatrixXd  matrix)
     }
 }
 
-/** \brief Initializes all the datastructres that are needed to solve the linear system of equations and deterimine U
+/** \brief Initializes all the datastructres that are needed to solve the linear system of equations and deterimine U.
  * The K matrix (Global Stiffness Matrix) is resized to size (total dofs, total dofs) and all elements are set to zero.
  * The F Vector is resized to size (total dofs) and all elements are set to zero.
  * The solution vector U (displacement vector) is resized to size (total dofs).
@@ -359,7 +359,7 @@ inline double FE::C(uint8_t i, uint8_t j, uint8_t k, uint8_t l){
 
 
 /** \brief This function is used to evaluate the Jacobian matrix, its inverse and its determinant at a paticular guassian quadrature point.
- * The Jacobian is calculated in a speerate inline function to prevent clutter in the already cluttered elemental K code.
+ * The Jacobian is calculated in a seperate inline function to prevent clutter in the already cluttered elemental K code.
  * \param q1 Identifies the number of the quadrature point along the 'xi' direction
  * \param q2 Identifies the number of the quadrature point along the 'eta' direction
  */
@@ -385,7 +385,7 @@ inline void FE::cal_jac(uint8_t q1, uint8_t q2){
 
 
 /**\brief This method is used to fill up the elemental K matrix.
- * Since our domain is made up of all the same type of elements with equal sizing, the cal_k_local method is only called once to fing the K elemental for the 1st element since all the elements will have the same k local.
+ * Since our domain is made up of all the same type of elements with equal sizing, the cal_k_local method is only called once to find the K elemental for the 1st element since all the elements will have the same k local.
  */
 
 
@@ -426,7 +426,7 @@ void FE::cal_k_local(){
 }
 /** \brief This method takes the K local found by cal_k_local and assembles the K Global Matrix.
  * In addition it also modifies the K global to account for the Dirichlet Boundary conditions. While assembling the K global matrix, the K local value at the appropriate local node is multiplied by the relative density 'x' of that paticular element raised to a power 'penal' which is the panalization power. In mathematical terms -
- * \f$(K(global dof A, global dof B) = x(global element number along y, global element number along x)^{penal} klocal(local dof A, local dof B))\f$.
+ * \f$(K(\mbox{global dof A, global dof B}) = x(\mbox{global element number along y, global element number along x})^{penal} klocal(\mbox{local dof A, local dof B}))\f$.
  * Note - This is the function that is evaluated at every optimization loop and it is thus the most cruicial function in terms of performance.
  * \param x This is the relative densities Eigen Matrix that is used for the topology optimization.
  * \param penal The penalization power. The penalization power is used to refine the solution to solid and void regions to aid manufacturibility.As we can see from the formula, it will make the values closer to 0 go faster towards 0 and the values closer to 1 go faster towards 1.
@@ -492,8 +492,8 @@ void FE::assemble(Eigen::MatrixXd x,double penal){
 }
 
 
-/** \brief Solves the linear system of equations KU = F using a Sparse LDLT Cholesky Decomoposition method provided by Eigen
- * The K and F global matrices that were defined and filled as Dense matrices, they are converted into sparse matrix using the sparseView() method available in Eigen. This is done because these matrices are in fact sparse and using sparse matrix over dense matrices dramatically speeds up the solving of the system of linear equations.
+/** \brief Solves the linear system of equations KU = F using a Sparse LDLT Cholesky Decomoposition method provided by Eigen.
+ * The K and F global matrices that were defined and filled as Dense matrices  are converted into sparse matrix using the sparseView() method available in Eigen. This is done because these matrices are in fact sparse and using sparse matrix over dense matrices dramatically speeds up the solving time of the system of linear equations.
  * This method returns the solution vector U to the toplogy function where it is used to find the compliance 'c'.
  */
 Eigen::VectorXd FE::solve(){
@@ -507,7 +507,7 @@ Eigen::VectorXd FE::solve(){
     return U;
 }
 
-/** \brief Used to write the solution U to a .vtu file for visulisation and debugging.s*/
+/** \brief Used to write the solution U to a .vtu file for visulisation and debugging.*/
 void FE::fem_to_vtk(){
         
     // Write to file all the stuff that is needed for plotting

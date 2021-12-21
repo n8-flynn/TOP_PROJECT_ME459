@@ -14,7 +14,7 @@ MatrixXd top(unsigned int nelx, unsigned int nely, double volfrac, double penal,
 		\param volfrac Volume fraction - set between 0 and 1.
 		\param penal Penalty factor - used to remove gray portions of the design that don't form solids.
 		\param rmin Filter size (divided by the element size).
-		\param wh Loading and support condition.
+		\param wh This tells us where the force is to be applied. A value of 0 applies the force at (L,0). A value of 1 applies the force at (L/2,B/2). A value of 2 applied the force at (L,B).
 	*/
 	
 	printf("Top starting\n");
@@ -34,7 +34,7 @@ MatrixXd top(unsigned int nelx, unsigned int nely, double volfrac, double penal,
 		\param change Maximum change between x and x old. Used as convergence criteria.	
 		\param U Finite element displacement vector. 
 		\param x Volume fraction field nely by nelx. Originally, all elements are set equal to the volume fraction.
-		\param move Used to index elements by x during the optimization function. 
+		\param move Nothing but the maximum fractional change allowd for each topology design.
 	*/
 
 	uint8_t no_quad_points = 3; //Domain dimensions.

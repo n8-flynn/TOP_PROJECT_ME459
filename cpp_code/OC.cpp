@@ -80,8 +80,8 @@ MatrixXd OC(unsigned int nelx, unsigned int nely, double volfrac,MatrixXd x,Matr
         \param nely Number of elements in the y direction.
         \param volfrac Volume fraction.
         \param x Volume fraction field that is nely by nelx.
-        \param dc (not sure on this).
-        \param move_val Distance volume fraction matrix is indexed (not sure on this).
+        \param dc Change in complaince with respect to density. Gives the sensitivity of the compliance.
+        \param move_val Move limit (move_val) is nothing but the maximum fractional change allowd for each topology design. 
     */
     
     double l1 = 0.0; //Lower bound of the lagrangian multiplier. 
