@@ -13,6 +13,6 @@ endif()
 set(CMAKE_CXX_FLAGS_RELEASE "-O3")
 
 #Adding files
-add_executable(trial main.cpp top.cpp OC.cpp FE.cpp check.cpp top.h OC.h FE.h check.h)
-target_include_directories(trial PRIVATE ${PROJECT_SOURCE_DIR}/Eigen)
-#target_link_libraries (trial Eigen3::Eigen)
+add_executable(run main.cpp top.cpp OC.cpp FE.cpp check.cpp top.h OC.h FE.h check.h)
+target_include_directories(run PRIVATE ${PROJECT_SOURCE_DIR}/Eigen)
+#target_link_libraries (run Eigen3::Eigen)
